@@ -1,0 +1,17 @@
+[user]
+  name = Joakim Ekberg
+  email = jocke.ekberg@gmail.com
+[branch]
+  autosetuprebase = always
+[filter "lfs"]
+  process = git-lfs filter-process
+  required = true
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+[merge]
+  ff = only
+[push]
+  followTags = true
+[log]
+  abbrevCommit = true
+  decorate = true
