@@ -217,6 +217,9 @@ nmap <leader>t :Files<CR>
 " Use a bottom split for fzf
 let g:fzf_layout = { 'window': 'bot 15split enew' }
 
+" Reset seach term with esc
+nmap <silent> <esc> :let @/ = ""<cr>
+
 " Make fzf colors match Vim colors
 let g:fzf_colors = {
   \ 'fg':      ['fg', 'Normal'],
@@ -293,3 +296,4 @@ au VimResized * :wincmd =
 "     exe l:currentWindow . "wincmd w"
 "   endif
 " endfunction
+"
