@@ -1,15 +1,29 @@
 {
-  "coc.preferences.jumpCommand": "vsplit",
-  "coc.preferences.formatOnSaveFiletypes": ["json", "css", "scss", "Markdown"],
+  "coc.preferences.jumpCommand": "edit",
+  "coc.preferences.hoverTarget": "float",
+  "coc.preferences.formatOnSaveFiletypes": [
+    "typescript",
+    "typescriptreact",
+    "javascript",
+    "javascriptreact",
+    "json",
+    "css",
+    "scss",
+    "Markdown"
+  ],
   "diagnostic.errorSign": ">",
   "diagnostic.hintSign": "●",
   "diagnostic.infoSign": "●",
   "diagnostic.warningSign": "●",
-  "eslint.autoFixOnSave": true,
   "eslint.enable": true,
-  "eslint.filetypes": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.autoFixOnSave": true,
+  "eslint.filetypes": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
   "javascript.suggestionActions.enabled": false,
-  "suggest.echodocSupport": true,
   "suggest.maxCompleteItemCount": 20,
-  "tsserver.enableJavascript": false
+  "list.maxPreviewHeight": 16
 }
