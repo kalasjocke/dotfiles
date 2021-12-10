@@ -1,6 +1,6 @@
 [user]
   name = Joakim Ekberg
-  email = jocke.ekberg@gmail.com
+  email = joakim@lookback.io
 [branch]
   autosetuprebase = always
 [filter "lfs"]
@@ -15,3 +15,7 @@
 [log]
   abbrevCommit = true
   decorate = true
+[pull]
+  ff = only
+[alias]
+  praise = blame
