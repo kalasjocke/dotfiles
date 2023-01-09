@@ -286,15 +286,15 @@ goto_definition = function(split_cmd)
       end
 
       if vim.tbl_islist(result) then
-        util.jump_to_location(result[1])
+        util.jump_to_location(result[1], 'utf-8')
 
         if #result > 1 then
-          util.set_qflist(util.locations_to_items(result))
-          api.nvim_command("copen")
-          api.nvim_command("wincmd p")
+          vim.fn.setqflist(util.locations_to_items(result, 'utf-8'))
+          vim.api.nvim_command("copen")
+          vim.api.nvim_command("wincmd p")
         end
       else
-        util.jump_to_location(result)
+        util.jump_to_location(result, 'utf-8')
       end
     end
   )
@@ -314,19 +314,11 @@ local on_attach = function(client, bufnr)
   buf_set_keymap('n', '<leader>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
   buf_set_keymap('n', '<leader>a', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
   -- buf_set_keymap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
-  buf_set_keymap('n', '<leader>e', '<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>', opts)
-  buf_set_keymap('n', '[g', '<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>', opts)
-  buf_set_keymap('n', ']g', '<cmd>lua vim.lsp.diagnostic.goto_next()<CR>', opts)
+  buf_set_keymap('n', '<leader>e', '<cmd>lua vim.diagnostic.open_float(0, { scope="line" })<CR>', opts)
+  buf_set_keymap('n', '[g', '<cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
+  buf_set_keymap('n', ']g', '<cmd>lua vim.diagnostic.goto_next()<CR>', opts)
 
-  vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
-    vim.lsp.diagnostic.on_publish_diagnostics, {
-      virtual_text = false,
-      update_in_insert = false,
-    }
-  )
-
-  -- Use efm for formatting needs.
-  client.resolved_capabilities.document_formatting = false
+  vim.diagnostic.config({virtual_text=false, signs=true, update_in_insert=false})
 
   vim.api.nvim_buf_set_option(0, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 end
