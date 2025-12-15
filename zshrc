@@ -1,4 +1,5 @@
 # Load the pure prompt
+fpath+=$HOME/.zsh/pure
 autoload -Uz promptinit; promptinit
 prompt pure
 
@@ -15,12 +16,13 @@ zstyle ':completion:*' menu select
 zmodload zsh/complist
 bindkey -M menuselect '^[[Z' reverse-menu-complete
 
-# Enable vim mode
-bindkey -v
+# Setup brew
+eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # Some aliases
 alias gs="git status"
 alias gc="git commit --verbose"
+alias gcp="gh pr view --json "url" | jq -r ".url" | pbcopy"
 alias ga="git add"
 alias gb="git branch"
 alias gd="git diff"
@@ -34,6 +36,7 @@ alias gra="git rebase --abort"
 alias gpfwl="git push --force-with-lease"
 alias gclean="git branch --merged | egrep -v master | egrep -v main | xargs git branch -d"
 alias gl='git log --graph --all --pretty=format:"%Cblue%h%Creset %s%C(yellow)%d%Creset (%Cgreen%an%Creset, %C(cyan)%ar%Creset)"'
+alias gri='git rebase -i --autosquash `git merge-base main HEAD`'
 alias ggpull="git pull origin \$(git rev-parse --abbrev-ref HEAD)"
 alias ggpush="git push origin \$(git rev-parse --abbrev-ref HEAD)"
 alias tc="tmux show-buffer | pbcopy"
@@ -41,10 +44,6 @@ alias c="clear"
 alias l="ls -GFlash"
 alias tree="tree -C"
 alias ..="cd .."
-
-function gri() {
-  git rebase --interactive --autostash --autosquash "$1"~1
-}
 
 # Keyboard timeout
 export KEYTIMEOUT=1
@@ -54,11 +53,6 @@ export EDITOR=nvim
 alias vim="nvim"
 
 export LANG=en_US.UTF-8
-
-# fzf zsh integration
-export FZF_DEFAULT_COMMAND='ag -g ""'
-export FZF_CTRL_R_OPTS='--height 12'
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # Configure history
 HISTFILE=~/.zsh_history
@@ -70,24 +64,35 @@ setopt hist_save_no_dups
 setopt hist_find_no_dups
 setopt hist_ignore_all_dups
 
+# fzf zsh integration
+export FZF_DEFAULT_OPTS="--no-separator"
+export FZF_CTRL_R_OPTS='--height 12'
+export FZF_DEFAULT_COMMAND='ag -g ""'
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
 # Use agr to find replace using ag
 function agr { ag -0 -l "$1" | AGR_FROM="$1" AGR_TO="$2" xargs -0 perl -pi -e 's/$ENV{AGR_FROM}/$ENV{AGR_TO}/g'; }
 
-# Setup rbenv
-# export PATH="$HOME/.rbenv/bin:$PATH"
-# eval "$(rbenv init -)"
+# Enable vim mode
+bindkey -v
 
-# Setup pyenv
-# eval "$(pyenv init -)"
-
-# Setup fnm
+# fnm
 eval "$(fnm env)"
-
-# Setup Cargo
-export PATH="/Users/$USER/.cargo/bin:$PATH"
-
-# Copy xterm-kitty over when using ssh
-alias ssh="kitty +kitten ssh"
 
 # Add our own bin to path"
 export PATH="$HOME/.bin:$PATH"
+
+# Postgres
+export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"
+
+# Ruby
+export PATH="/opt/homebrew/opt/ruby@3.3/bin:$PATH"
+
+# Rust
+export PATH="/Users/$USER/.cargo/bin:$PATH"
+
+# Bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+[ -s "/Users/joakim/.bun/_bun" ] && source "/Users/joakim/.bun/_bun"
+
