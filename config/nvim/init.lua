@@ -302,9 +302,7 @@ require("blink.cmp").setup({
 
 -- sidekick
 require("sidekick").setup({
-	opts = {
-		nes = { enabled = false },
-	},
+	nes = { enabled = false },
 	cli = {
 		mux = {
 			backend = "tmux",
