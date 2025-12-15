@@ -1,0 +1,11 @@
+font-family = "FiraCode"
+font-size = 16
+font-thicken = true
+
+theme = dark:Rose Pine,light:Rose Pine Dawn
+
+macos-titlebar-proxy-icon = hidden
+
+cursor-style = block
+cursor-style-blink = false
+shell-integration-features = no-cursor
