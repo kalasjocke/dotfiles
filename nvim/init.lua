@@ -311,5 +311,13 @@ require("sidekick").setup({
 	},
 })
 
+vim.keymap.set("v", "<leader>as", function()
+	require("sidekick.cli").send({ prompt = "selection" })
+end)
+vim.keymap.set({ "v", "n" }, "<leader>af", function()
+	require("sidekick.cli").send({ prompt = "fix" })
+end)
+vim.keymap.set({ "v", "n" }, "<leader>ap", require("sidekick.cli").prompt)
+
 -- gitsigns
 require("gitsigns").setup({})
