@@ -5,6 +5,7 @@ vim.pack.add({
 	"https://github.com/christoomey/vim-tmux-navigator",
 	"https://github.com/editorconfig/editorconfig-vim",
 	"https://github.com/tpope/vim-fugitive",
+	"https://github.com/tpope/vim-rhubarb",
 	"https://github.com/tpope/vim-eunuch",
 	"https://github.com/tpope/vim-surround",
 	"https://github.com/tomtom/tcomment_vim",
@@ -15,10 +16,13 @@ vim.pack.add({
 	"https://github.com/ibhagwan/fzf-lua",
 	"https://github.com/lukas-reineke/indent-blankline.nvim",
 	{ src = "https://github.com/saghen/blink.cmp", version = "v1.8.0" },
-	"https://github.com/zbirenbaum/copilot.lua",
-	"https://github.com/copilotlsp-nvim/copilot-lsp",
+	-- "https://github.com/zbirenbaum/copilot.lua",
+	-- "https://github.com/copilotlsp-nvim/copilot-lsp",
+	"https://github.com/folke/snacks.nvim",
 	"https://github.com/folke/sidekick.nvim",
 	"https://github.com/lewis6991/gitsigns.nvim",
+	"https://github.com/folke/trouble.nvim",
+	"https://github.com/rebelot/kanagawa.nvim",
 })
 
 -- options
@@ -36,7 +40,9 @@ vim.opt.clipboard = "unnamedplus"
 vim.opt.foldmethod = "indent"
 vim.opt.foldlevel = 10
 vim.opt.signcolumn = "yes"
-vim.cmd("colorscheme rose-pine")
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+vim.cmd.colorscheme("rose-pine")
 
 -- fzf
 require("fzf-lua").setup({
@@ -50,21 +56,23 @@ require("fzf-lua").setup({
 -- keymaps
 vim.keymap.set("n", "<leader>o", ":update<CR> :source<CR>")
 vim.keymap.set("n", "<leader>w", ":write<CR>")
+vim.keymap.set("n", "<leader>q", ":quit<CR>")
 vim.keymap.set({ "n", "v" }, "\\", "gcc", { remap = true })
--- vim.keymap.set("n", "<leader>t", ":GFiles<CR>")
 vim.keymap.set("n", "<leader>t", require("fzf-lua").files)
+vim.keymap.set("n", "<leader>f", require("fzf-lua").live_grep)
+vim.keymap.set("n", "<leader>s", require("fzf-lua").lsp_workspace_symbols)
 vim.keymap.set("n", "<space>", "za")
 
 local au = vim.api.nvim_create_augroup("MyAutocmds", { clear = true })
 
 -- set 0 fold in typescript
-vim.api.nvim_create_autocmd("FileType", {
-	group = au,
-	pattern = "typescript",
-	callback = function()
-		vim.opt_local.foldlevel = 0
-	end,
-})
+-- vim.api.nvim_create_autocmd("FileType", {
+-- 	group = au,
+-- 	pattern = "typescript",
+-- 	callback = function()
+-- 		vim.opt_local.foldlevel = 0
+-- 	end,
+-- })
 
 -- Have } and { navigate past folds
 vim.keymap.set("n", "}", function()
@@ -129,7 +137,7 @@ local languages = {
 	markdown = { prettier },
 }
 
--- If using nvim >= 0.11 then use the following
+-- efm
 vim.lsp.config("efm", {
 	cmd = { "efm-langserver" },
 	filetypes = vim.tbl_keys(languages),
@@ -195,7 +203,8 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
 		vim.keymap.set("n", "gD", definition_vsplit, opts)
 		vim.keymap.set("n", "S", vim.lsp.buf.signature_help, opts)
-		vim.keymap.set("n", "<leader>r", vim.lsp.buf.references, opts)
+		vim.keymap.set("n", "<leader>r", "<cmd>Trouble lsp_references toggle<cr>", opts)
+		vim.keymap.set("n", "<leader>d", "<cmd>Trouble diagnostics toggle<cr>", opts)
 		vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
 		vim.keymap.set("n", "<leader>a", vim.lsp.buf.code_action, opts)
 	end,
@@ -209,39 +218,39 @@ vim.lsp.config("lua", {
 })
 
 -- copilot
-vim.lsp.config("copilot", {
-	cmd = { "copilot-language-server", "--stdio" },
-})
+-- vim.lsp.config("copilot", {
+-- 	cmd = { "copilot-language-server", "--stdio" },
+-- })
 
 -- copilot.lua
-require("copilot").setup({
-	suggestion = {
-		enabled = true,
-		auto_trigger = true,
-		keymap = {
-			accept = "<Tab>",
-		},
-	},
-	nes = {
-		enabled = false,
-		auto_trigger = false,
-		keymap = {
-			accept_and_goto = "<leader>s",
-			accept = false,
-			dismiss = false,
-		},
-	},
-	filetypes = {
-		typescript = true,
-		typescriptreact = true,
-		json = true,
-		lua = true,
-		gitcommit = true,
-		["*"] = false,
-	},
-})
+-- require("copilot").setup({
+-- 	suggestion = {
+-- 		enabled = true,
+-- 		auto_trigger = true,
+-- 		keymap = {
+-- 			accept = "<Tab>",
+-- 		},
+-- 	},
+-- 	nes = {
+-- 		enabled = false,
+-- 		auto_trigger = false,
+-- 		keymap = {
+-- 			accept_and_goto = "<leader>s",
+-- 			accept = false,
+-- 			dismiss = false,
+-- 		},
+-- 	},
+-- 	filetypes = {
+-- 		typescript = true,
+-- 		typescriptreact = true,
+-- 		json = true,
+-- 		lua = true,
+-- 		gitcommit = true,
+-- 		["*"] = false,
+-- 	},
+-- })
 
-vim.lsp.enable({ "efm", "tsserver", "lua", "copilot" })
+vim.lsp.enable({ "efm", "tsserver", "lua" })
 
 -- treesitter
 local treesitter_languages = {
@@ -292,12 +301,21 @@ require("blink.cmp").setup({
 		["<C-j>"] = { "select_next", "fallback" },
 		["<Tab>"] = {
 			"snippet_forward",
-			function()
-				return require("sidekick").nes_jump_or_apply()
-			end,
+			-- function()
+			-- 	return require("sidekick").nes_jump_or_apply()
+			-- end,
 			"fallback",
 		},
 	},
+})
+
+-- snacks
+require("snacks").setup({
+	-- default settings
+	-- enable = true,
+	-- timeout = 1000,
+	-- message = "Saved",
+	-- position = "top",
 })
 
 -- sidekick
@@ -311,13 +329,48 @@ require("sidekick").setup({
 	},
 })
 
-vim.keymap.set("v", "<leader>as", function()
-	require("sidekick.cli").send({ prompt = "selection" })
-end)
 vim.keymap.set({ "v", "n" }, "<leader>af", function()
-	require("sidekick.cli").send({ prompt = "fix" })
+	require("sidekick.cli").send({ msg = "{file}" })
+end)
+vim.keymap.set("v", "<leader>as", function()
+	require("sidekick.cli").send({ msg = "{this}" })
 end)
 vim.keymap.set({ "v", "n" }, "<leader>ap", require("sidekick.cli").prompt)
 
 -- gitsigns
-require("gitsigns").setup({})
+require("gitsigns").setup({
+	on_attach = function(bufnr)
+		local gs = package.loaded.gitsigns
+		local opts = { buffer = bufnr }
+
+		-- Navigation
+		vim.keymap.set("n", "]h", gs.next_hunk, opts)
+		vim.keymap.set("n", "[h", gs.prev_hunk, opts)
+
+		-- Staging
+		vim.keymap.set("n", "<leader>hs", gs.stage_hunk, opts)
+		vim.keymap.set("n", "<leader>hr", gs.reset_hunk, opts)
+		vim.keymap.set("n", "<leader>hu", gs.undo_stage_hunk, opts)
+		vim.keymap.set("n", "<leader>hp", gs.preview_hunk, opts)
+		vim.keymap.set("n", "<leader>hS", gs.stage_buffer, opts)
+		vim.keymap.set("n", "<leader>hR", gs.reset_buffer, opts)
+
+		-- Visual mode staging
+		vim.keymap.set("v", "<leader>hs", function()
+			gs.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
+		end, opts)
+		vim.keymap.set("v", "<leader>hr", function()
+			gs.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
+		end, opts)
+	end,
+})
+
+-- Git commands
+vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns blame<cr>")
+vim.keymap.set("n", "<leader>gd", "<cmd>Gdiffsplit<cr>")
+
+-- trouble
+require("trouble").setup({})
+vim.keymap.set("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>")
+vim.keymap.set("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>")
+vim.keymap.set("n", "<leader>xq", "<cmd>Trouble qflist toggle<cr>")

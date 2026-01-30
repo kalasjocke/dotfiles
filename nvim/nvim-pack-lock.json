@@ -13,6 +13,10 @@
       "rev": "efe563802a550b7f1b7743b007987e97cba22718",
       "src": "https://github.com/zbirenbaum/copilot.lua"
     },
+    "cursortab.nvim": {
+      "rev": "0c920dd0a5c0b87e3160c444a98eef7adc0b7795",
+      "src": "https://github.com/leonardcser/cursortab.nvim"
+    },
     "editorconfig-vim": {
       "rev": "13b86c5c691785ffbf2d6508c621dabb08e93df0",
       "src": "https://github.com/editorconfig/editorconfig-vim"
@@ -41,9 +45,17 @@
       "rev": "005b56001b2cb30bfa61b7986bc50657816ba4ba",
       "src": "https://github.com/lukas-reineke/indent-blankline.nvim"
     },
+    "kanagawa.nvim": {
+      "rev": "aef7f5cec0a40dbe7f3304214850c472e2264b10",
+      "src": "https://github.com/rebelot/kanagawa.nvim"
+    },
     "mason.nvim": {
       "rev": "57e5a8addb8c71fb063ee4acda466c7cf6ad2800",
       "src": "https://github.com/mason-org/mason.nvim"
+    },
+    "minuet-ai.nvim": {
+      "rev": "7522a2cfed5797974c72d3f10f48c51e0a6778e3",
+      "src": "https://github.com/milanglacier/minuet-ai.nvim"
     },
     "neovim": {
       "rev": "cf2a288696b03d0934da713d66c6d71557b5c997",
@@ -71,13 +83,25 @@
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects",
       "version": "'master'"
     },
+    "plenary.nvim": {
+      "rev": "b9fd5226c2f76c951fc8ed5923d85e4de065e509",
+      "src": "https://github.com/nvim-lua/plenary.nvim"
+    },
     "sidekick.nvim": {
       "rev": "c2bdf8cfcd87a6be5f8b84322c1b5052e78e302e",
       "src": "https://github.com/folke/sidekick.nvim"
     },
+    "snacks.nvim": {
+      "rev": "fe7cfe9800a182274d0f868a74b7263b8c0c020b",
+      "src": "https://github.com/folke/snacks.nvim"
+    },
     "tcomment_vim": {
       "rev": "48ab639a461d9b8344f7fee06cb69b4374863b13",
       "src": "https://github.com/tomtom/tcomment_vim"
+    },
+    "trouble.nvim": {
+      "rev": "bd67efe408d4816e25e8491cc5ad4088e708a69a",
+      "src": "https://github.com/folke/trouble.nvim"
     },
     "vim-eunuch": {
       "rev": "e86bb794a1c10a2edac130feb0ea590a00d03f1e",
@@ -86,6 +110,10 @@
     "vim-fugitive": {
       "rev": "61b51c09b7c9ce04e821f6cf76ea4f6f903e3cf4",
       "src": "https://github.com/tpope/vim-fugitive"
+    },
+    "vim-rhubarb": {
+      "rev": "5496d7c94581c4c9ad7430357449bb57fc59f501",
+      "src": "https://github.com/tpope/vim-rhubarb"
     },
     "vim-surround": {
       "rev": "3d188ed2113431cf8dac77be61b842acb64433d9",
