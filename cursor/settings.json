@@ -1,0 +1,68 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.tabSize": 2,
+  "vim.foldfix": true,
+  "vim.leader": ",",
+  "vim.normalModeKeyBindingsNonRecursive": [
+    {
+      "before": ["<leader>", "t"],
+      "commands": ["workbench.action.quickOpen"]
+    },
+    {
+      "before": ["<leader>", "a"],
+      "commands": ["editor.action.quickFix"],
+      "when": "editorHasCodeActionsProvider"
+    },
+    {
+      "before": ["<leader>", "H"],
+      "commands": ["editor.action.peekTypeDefinition"]
+    },
+    {
+      "before": ["<leader>", "h"],
+      "commands": ["editor.action.showHover"]
+    },
+    {
+      "before": ["<leader>", "r"],
+      "commands": ["editor.action.goToReferences"]
+    },
+    {
+      "before": ["<leader>", "R"],
+      "commands": ["editor.action.rename"]
+    },
+    {
+      "before": ["<space>"],
+      "commands": ["editor.toggleFold"]
+    },
+    {
+      "before": ["]", "g"],
+      "commands": ["editor.action.marker.next"]
+    },
+    {
+      "before": ["[", "g"],
+      "commands": ["editor.action.marker.prev"]
+    },
+    {
+      "before": ["g", "shift+d"],
+      "commands": ["editor.action.revealDefinitionAside"]
+    },
+    {
+      "before": ["g", "d"],
+      "commands": ["editor.action.revealDefinition"]
+    },
+    {
+      "before": ["shift+k"],
+      "commands": ["editor.action.peekDefinition"]
+    },
+    {
+      "before": ["<leader>", "b"],
+      "commands": ["gitlens.toggleFileBlame"]
+    }
+  ],
+  "gitlens.hovers.currentLine.over": "line",
+  "editor.cursorBlinking": "solid",
+  "workbench.editor.splitSizing": "distribute",
+  "editor.formatOnSave": true,
+  "workbench.editor.revealIfOpen": true,
+  "gitlens.currentLine.enabled": false,
+  "gitlens.hovers.avatars": false
+}
