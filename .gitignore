@@ -1,3 +1,4 @@
 ssh
 config/nvim/plugged
 .DS_Store
+zshrc.local
