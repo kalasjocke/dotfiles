@@ -44,6 +44,7 @@ alias c="clear"
 alias l="ls -GFlash"
 alias tree="tree -C"
 alias ..="cd .."
+alias cc="claude"
 
 # Keyboard timeout
 export KEYTIMEOUT=1
