@@ -19,7 +19,7 @@ vim.pack.add({
 	-- "https://github.com/zbirenbaum/copilot.lua",
 	-- "https://github.com/copilotlsp-nvim/copilot-lsp",
 	"https://github.com/folke/snacks.nvim",
-	"https://github.com/folke/sidekick.nvim",
+	"https://github.com/coder/claudecode.nvim",
 	"https://github.com/lewis6991/gitsigns.nvim",
 	"https://github.com/folke/trouble.nvim",
 	"https://github.com/rebelot/kanagawa.nvim",
@@ -60,7 +60,7 @@ vim.keymap.set("n", "<leader>q", ":quit<CR>")
 vim.keymap.set({ "n", "v" }, "\\", "gcc", { remap = true })
 vim.keymap.set("n", "<leader>t", require("fzf-lua").files)
 vim.keymap.set("n", "<leader>f", require("fzf-lua").live_grep)
-vim.keymap.set("n", "<leader>s", require("fzf-lua").lsp_workspace_symbols)
+vim.keymap.set("n", "<leader>s", require("fzf-lua").lsp_live_workspace_symbols)
 vim.keymap.set("n", "<space>", "za")
 
 local au = vim.api.nvim_create_augroup("MyAutocmds", { clear = true })
@@ -161,8 +161,12 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 })
 
 -- typescript
-vim.lsp.config("tsserver", {
-	cmd = { "typescript-language-server", "--stdio" },
+-- vim.lsp.config("tsserver", {
+-- 	cmd = { "typescript-language-server", "--stdio" },
+-- 	filetypes = { "typescript", "typescriptreact" },
+-- })
+vim.lsp.config("vtsls", {
+	cmd = { "vtsls", "--stdio" },
 	filetypes = { "typescript", "typescriptreact" },
 })
 
@@ -203,7 +207,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
 		vim.keymap.set("n", "gD", definition_vsplit, opts)
 		vim.keymap.set("n", "S", vim.lsp.buf.signature_help, opts)
-		vim.keymap.set("n", "<leader>r", "<cmd>Trouble lsp_references toggle<cr>", opts)
+		vim.keymap.set("n", "<leader>r", "<cmd>Trouble lsp_references open<cr>", opts)
 		vim.keymap.set("n", "<leader>d", "<cmd>Trouble diagnostics toggle<cr>", opts)
 		vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
 		vim.keymap.set("n", "<leader>a", vim.lsp.buf.code_action, opts)
@@ -250,7 +254,7 @@ vim.lsp.config("lua", {
 -- 	},
 -- })
 
-vim.lsp.enable({ "efm", "tsserver", "lua" })
+vim.lsp.enable({ "efm", "vtsls", "lua" })
 
 -- treesitter
 local treesitter_languages = {
@@ -318,24 +322,30 @@ require("snacks").setup({
 	-- position = "top",
 })
 
--- sidekick
-require("sidekick").setup({
-	nes = { enabled = false },
-	cli = {
-		mux = {
-			backend = "tmux",
-			enabled = true,
-		},
+-- claudecode
+require("claudecode").setup({
+	visual_demotion_delay_ms = 10,
+	terminal = {
+		provider = "none",
 	},
 })
 
-vim.keymap.set({ "v", "n" }, "<leader>af", function()
-	require("sidekick.cli").send({ msg = "{file}" })
-end)
+local function focus_claude_pane()
+	vim.fn.system([[
+		tmux list-panes -F '#{pane_id} #{pane_pid}' | while IFS=' ' read -r id pid; do
+			if pgrep -P "$pid" -f claude >/dev/null 2>&1; then
+				tmux select-pane -t "$id"
+				break
+			fi
+		done
+	]])
+end
+
 vim.keymap.set("v", "<leader>as", function()
-	require("sidekick.cli").send({ msg = "{this}" })
+	vim.cmd("ClaudeCodeSend")
+	focus_claude_pane()
 end)
-vim.keymap.set({ "v", "n" }, "<leader>ap", require("sidekick.cli").prompt)
+vim.keymap.set("v", "<leader>aS", "<cmd>ClaudeCodeSend<cr>")
 
 -- gitsigns
 require("gitsigns").setup({
@@ -370,7 +380,15 @@ vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns blame<cr>")
 vim.keymap.set("n", "<leader>gd", "<cmd>Gdiffsplit<cr>")
 
 -- trouble
-require("trouble").setup({})
+require("trouble").setup({
+	modes = {
+		lsp_references = {
+			auto_refresh = false,
+			follow = false,
+		},
+	},
+})
+vim.keymap.set("n", "<leader>c", "<cmd>Trouble close<cr>")
 vim.keymap.set("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>")
 vim.keymap.set("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>")
 vim.keymap.set("n", "<leader>xq", "<cmd>Trouble qflist toggle<cr>")

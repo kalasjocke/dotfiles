@@ -5,6 +5,10 @@
       "src": "https://github.com/saghen/blink.cmp",
       "version": "'v1.8.0'"
     },
+    "claudecode.nvim": {
+      "rev": "aa9a5cebebdbfa449c1c5ff229ba5d98e66bafed",
+      "src": "https://github.com/coder/claudecode.nvim"
+    },
     "copilot-lsp": {
       "rev": "884034b23c3716d55b417984ad092dc2b011115b",
       "src": "https://github.com/copilotlsp-nvim/copilot-lsp"
