@@ -107,6 +107,12 @@ vim.api.nvim_create_autocmd("FileType", {
 	end,
 })
 
+-- reload files changed externally
+vim.api.nvim_create_autocmd({ "FocusGained" }, {
+	group = au,
+	command = "checktime",
+})
+
 -- resize splits on window resize
 vim.api.nvim_create_autocmd("VimResized", {
 	group = au,
