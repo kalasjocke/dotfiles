@@ -62,6 +62,10 @@ vim.keymap.set("n", "<leader>t", require("fzf-lua").files)
 vim.keymap.set("n", "<leader>f", require("fzf-lua").live_grep)
 vim.keymap.set("n", "<leader>s", require("fzf-lua").lsp_live_workspace_symbols)
 vim.keymap.set("n", "<space>", "za")
+vim.keymap.set("x", "<C-h>", "<Cmd>TmuxNavigateLeft<CR>")
+vim.keymap.set("x", "<C-j>", "<Cmd>TmuxNavigateDown<CR>")
+vim.keymap.set("x", "<C-k>", "<Cmd>TmuxNavigateUp<CR>")
+vim.keymap.set("x", "<C-l>", "<Cmd>TmuxNavigateRight<CR>")
 
 local au = vim.api.nvim_create_augroup("MyAutocmds", { clear = true })
 
