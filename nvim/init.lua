@@ -235,13 +235,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		-- lsp keymaps
 		local opts = { noremap = true, silent = true }
 
-		vim.keymap.set("n", "<leader>h", vim.lsp.buf.hover, opts)
+		vim.keymap.set("n", "<leader>H", vim.lsp.buf.hover, opts)
 		vim.keymap.set("n", "gd", "<cmd>Trouble lsp_definitions open<cr>", opts)
 		vim.keymap.set("n", "gD", definition_vsplit, opts)
 		vim.keymap.set("n", "S", vim.lsp.buf.signature_help, opts)
 		vim.keymap.set("n", "<leader>r", "<cmd>Trouble lsp_references open focus=true<cr>", opts)
 		vim.keymap.set("n", "<leader>d", "<cmd>Trouble diagnostics toggle<cr>", opts)
-		vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
+		vim.keymap.set("n", "<leader>R", vim.lsp.buf.rename, opts)
 		vim.keymap.set("n", "<leader>a", function()
 			vim.lsp.buf.code_action({
 				filter = function(action)
