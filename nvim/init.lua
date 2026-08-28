@@ -15,7 +15,7 @@ vim.pack.add({
 	{ src = "https://github.com/nvim-treesitter/nvim-treesitter-textobjects", version = "main" },
 	"https://github.com/ibhagwan/fzf-lua",
 	"https://github.com/lukas-reineke/indent-blankline.nvim",
-	{ src = "https://github.com/saghen/blink.cmp", version = "v1.8.0" },
+	{ src = "https://github.com/saghen/blink.cmp", version = "v1.10.2" },
 	-- "https://github.com/zbirenbaum/copilot.lua",
 	-- "https://github.com/copilotlsp-nvim/copilot-lsp",
 	"https://github.com/folke/snacks.nvim",
@@ -135,15 +135,19 @@ vim.api.nvim_create_autocmd("VimResized", {
 })
 
 -- Make diagnostics show on jump
-vim.diagnostic.config({ jump = { float = true } })
+vim.diagnostic.config({
+	jump = {
+		on_jump = function(_, bufnr)
+			vim.diagnostic.open_float({ bufnr = bufnr, scope = "cursor", focus = false })
+		end,
+	},
+})
 
 -- lsp
 require("mason").setup()
 
 vim.lsp.config("*", {
-	settings = {
-		root_markers = { ".git" },
-	},
+	root_markers = { ".git" },
 })
 
 local eslint = require("efmls-configs.linters.eslint")
@@ -193,11 +197,17 @@ vim.lsp.config("vtsls", {
 })
 
 local definition_vsplit = function()
+	local client = vim.lsp.get_clients({ bufnr = 0, method = "textDocument/definition" })[1]
+	if not client then
+		return
+	end
+	local encoding = client.offset_encoding
+
 	vim.lsp.buf_request(
 		0,
 		"textDocument/definition",
-		vim.lsp.util.make_position_params(0, "utf-8"),
-		function(err, result, ctx)
+		vim.lsp.util.make_position_params(0, encoding),
+		function(_, result)
 			if result == nil or vim.tbl_isempty(result) then
 				return nil
 			end
@@ -206,15 +216,15 @@ local definition_vsplit = function()
 			vim.cmd("wincmd l")
 
 			if vim.islist(result) then
-				vim.lsp.util.show_document(result[1], "utf-8")
+				vim.lsp.util.show_document(result[1], encoding)
 
 				if #result > 1 then
-					vim.fn.setqflist(vim.lsp.util.locations_to_items(result, "utf-8"))
+					vim.fn.setqflist(vim.lsp.util.locations_to_items(result, encoding))
 					vim.api.nvim_command("copen")
 					vim.api.nvim_command("wincmd p")
 				end
 			else
-				vim.lsp.util.show_document(result[1], "utf-8")
+				vim.lsp.util.show_document(result, encoding)
 			end
 		end
 	)
@@ -386,8 +396,12 @@ require("gitsigns").setup({
 		local opts = { buffer = bufnr }
 
 		-- Navigation
-		vim.keymap.set("n", "]h", gs.next_hunk, opts)
-		vim.keymap.set("n", "[h", gs.prev_hunk, opts)
+		vim.keymap.set("n", "]h", function()
+			gs.nav_hunk("next")
+		end, opts)
+		vim.keymap.set("n", "[h", function()
+			gs.nav_hunk("prev")
+		end, opts)
 
 		-- Staging
 		vim.keymap.set("n", "<leader>hs", gs.stage_hunk, opts)
