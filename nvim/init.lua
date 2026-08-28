@@ -11,8 +11,8 @@ vim.pack.add({
 	"https://github.com/tomtom/tcomment_vim",
 	"https://github.com/scrooloose/nerdtree",
 	"https://github.com/windwp/nvim-autopairs",
-	{ src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "master" },
-	{ src = "https://github.com/nvim-treesitter/nvim-treesitter-textobjects", version = "master" },
+	{ src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
+	{ src = "https://github.com/nvim-treesitter/nvim-treesitter-textobjects", version = "main" },
 	"https://github.com/ibhagwan/fzf-lua",
 	"https://github.com/lukas-reineke/indent-blankline.nvim",
 	{ src = "https://github.com/saghen/blink.cmp", version = "v1.8.0" },
@@ -66,6 +66,7 @@ vim.keymap.set("x", "<C-h>", "<Cmd>TmuxNavigateLeft<CR>")
 vim.keymap.set("x", "<C-j>", "<Cmd>TmuxNavigateDown<CR>")
 vim.keymap.set("x", "<C-k>", "<Cmd>TmuxNavigateUp<CR>")
 vim.keymap.set("x", "<C-l>", "<Cmd>TmuxNavigateRight<CR>")
+vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
 local au = vim.api.nvim_create_augroup("MyAutocmds", { clear = true })
 
@@ -88,6 +89,17 @@ vim.keymap.set("n", "{", function()
 	local ln = vim.fn.search("^$", "Wnb")
 	return vim.fn.foldclosed(ln) == -1 and "{" or "{k{"
 end, { expr = true, noremap = true })
+
+-- restore cursor position when reopening a file
+vim.api.nvim_create_autocmd("BufReadPost", {
+	group = au,
+	callback = function()
+		local mark = vim.api.nvim_buf_get_mark(0, '"')
+		if mark[1] > 0 and mark[1] <= vim.api.nvim_buf_line_count(0) then
+			vim.api.nvim_win_set_cursor(0, mark)
+		end
+	end,
+})
 
 -- set spell in markdown
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
@@ -214,13 +226,19 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		local opts = { noremap = true, silent = true }
 
 		vim.keymap.set("n", "<leader>h", vim.lsp.buf.hover, opts)
-		vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+		vim.keymap.set("n", "gd", "<cmd>Trouble lsp_definitions open<cr>", opts)
 		vim.keymap.set("n", "gD", definition_vsplit, opts)
 		vim.keymap.set("n", "S", vim.lsp.buf.signature_help, opts)
-		vim.keymap.set("n", "<leader>r", "<cmd>Trouble lsp_references open<cr>", opts)
+		vim.keymap.set("n", "<leader>r", "<cmd>Trouble lsp_references open focus=true<cr>", opts)
 		vim.keymap.set("n", "<leader>d", "<cmd>Trouble diagnostics toggle<cr>", opts)
 		vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
-		vim.keymap.set("n", "<leader>a", vim.lsp.buf.code_action, opts)
+		vim.keymap.set("n", "<leader>a", function()
+			vim.lsp.buf.code_action({
+				filter = function(action)
+					return not action.disabled
+				end,
+			})
+		end, opts)
 	end,
 })
 
@@ -279,20 +297,7 @@ local treesitter_languages = {
 	"rust",
 	"typescript",
 }
-require("nvim-treesitter").setup({
-	ensure_installed = treesitter_languages,
-	highlight = {
-		enabled = true,
-		disable = function(_, buf)
-			local max_filesize = 300 * 1024 -- 300 KB
-			local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
-			if ok and stats and stats.size > max_filesize then
-				return true
-			end
-		end,
-		additional_vim_regex_highlighting = false,
-	},
-})
+require("nvim-treesitter").setup()
 
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = treesitter_languages,
@@ -337,6 +342,9 @@ require("claudecode").setup({
 	visual_demotion_delay_ms = 10,
 	terminal = {
 		provider = "none",
+	},
+	diff_opts = {
+		open_in_new_tab = true,
 	},
 })
 
@@ -405,6 +413,9 @@ vim.keymap.set("n", "<leader>gd", "<cmd>Gdiffsplit<cr>")
 
 -- trouble
 require("trouble").setup({
+	keys = {
+		["<esc>"] = "close",
+	},
 	modes = {
 		lsp_references = {
 			auto_refresh = false,
