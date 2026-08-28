@@ -235,7 +235,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		-- lsp keymaps
 		local opts = { noremap = true, silent = true }
 
-		vim.keymap.set("n", "<leader>H", vim.lsp.buf.hover, opts)
+		vim.keymap.set("n", "<leader>h", vim.lsp.buf.hover, opts)
 		vim.keymap.set("n", "gd", "<cmd>Trouble lsp_definitions open<cr>", opts)
 		vim.keymap.set("n", "gD", definition_vsplit, opts)
 		vim.keymap.set("n", "S", vim.lsp.buf.signature_help, opts)
@@ -404,18 +404,18 @@ require("gitsigns").setup({
 		end, opts)
 
 		-- Staging
-		vim.keymap.set("n", "<leader>hs", gs.stage_hunk, opts)
-		vim.keymap.set("n", "<leader>hr", gs.reset_hunk, opts)
-		vim.keymap.set("n", "<leader>hu", gs.undo_stage_hunk, opts)
-		vim.keymap.set("n", "<leader>hp", gs.preview_hunk, opts)
-		vim.keymap.set("n", "<leader>hS", gs.stage_buffer, opts)
-		vim.keymap.set("n", "<leader>hR", gs.reset_buffer, opts)
+		vim.keymap.set("n", "<leader>gs", gs.stage_hunk, opts)
+		vim.keymap.set("n", "<leader>gr", gs.reset_hunk, opts)
+		vim.keymap.set("n", "<leader>gu", gs.undo_stage_hunk, opts)
+		vim.keymap.set("n", "<leader>gp", gs.preview_hunk, opts)
+		vim.keymap.set("n", "<leader>gS", gs.stage_buffer, opts)
+		vim.keymap.set("n", "<leader>gR", gs.reset_buffer, opts)
 
 		-- Visual mode staging
-		vim.keymap.set("v", "<leader>hs", function()
+		vim.keymap.set("v", "<leader>gs", function()
 			gs.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
 		end, opts)
-		vim.keymap.set("v", "<leader>hr", function()
+		vim.keymap.set("v", "<leader>gr", function()
 			gs.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
 		end, opts)
 	end,
