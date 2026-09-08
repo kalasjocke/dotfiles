@@ -425,6 +425,17 @@ require("gitsigns").setup({
 vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns blame<cr>")
 vim.keymap.set("n", "<leader>gd", "<cmd>Gdiffsplit<cr>")
 
+-- close the Gitsigns blame split with <esc> or q
+vim.api.nvim_create_autocmd("FileType", {
+	group = au,
+	pattern = "gitsigns-blame",
+	callback = function(args)
+		for _, lhs in ipairs({ "<esc>", "q" }) do
+			vim.keymap.set("n", lhs, "<cmd>close<cr>", { buffer = args.buf, nowait = true })
+		end
+	end,
+})
+
 -- trouble
 require("trouble").setup({
 	keys = {
