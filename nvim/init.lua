@@ -216,6 +216,58 @@ vim.lsp.config("vtsls", {
 	filetypes = { "typescript", "typescriptreact" },
 })
 
+-- tsserver can miss changes made outside nvim (e.g. by claude) to files that
+-- aren't open, leaving stale diagnostics; watch the project and have vtsls
+-- reload it when that happens
+local nvim_writes = {}
+
+vim.api.nvim_create_autocmd("BufWritePre", {
+	group = au,
+	callback = function(args)
+		nvim_writes[vim.fs.normalize(vim.api.nvim_buf_get_name(args.buf))] = vim.uv.now()
+	end,
+})
+
+local function is_ts_project_file(path)
+	if path:find("/node_modules/") or path:find("/%.git/") then
+		return false
+	end
+	return path:match("%.[mc]?tsx?$") ~= nil or vim.fs.basename(path):match("^tsconfig.*%.json$") ~= nil
+end
+
+vim.api.nvim_create_autocmd("LspAttach", {
+	group = au,
+	callback = function(args)
+		local client = vim.lsp.get_client_by_id(args.data.client_id)
+		if not client or client.name ~= "vtsls" or not client.root_dir or client._external_watcher then
+			return
+		end
+		local root = client.root_dir
+		local event, timer = vim.uv.new_fs_event(), vim.uv.new_timer()
+		client._external_watcher = event
+		event:start(root, { recursive = true }, function(err, filename)
+			if err or not filename then
+				return
+			end
+			local path = vim.fs.normalize(vim.fs.joinpath(root, filename))
+			if not is_ts_project_file(path) or vim.uv.now() - (nvim_writes[path] or 0) < 1000 then
+				return
+			end
+			-- batch bursts of edits into a single reload
+			timer:start(500, 0, function()
+				vim.schedule(function()
+					if client:is_stopped() then
+						event:close()
+						timer:close()
+						return
+					end
+					client:exec_cmd({ title = "Reload TS projects", command = "typescript.reloadProjects" })
+				end)
+			end)
+		end)
+	end,
+})
+
 local definition_vsplit = function()
 	local client = vim.lsp.get_clients({ bufnr = 0, method = "textDocument/definition" })[1]
 	if not client then
