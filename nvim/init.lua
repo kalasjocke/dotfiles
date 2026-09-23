@@ -176,13 +176,33 @@ vim.lsp.config("efm", {
 	},
 })
 
+-- oxfmt (mcu); attaches only where an .oxfmtrc.json is found, so prettier via
+-- efm keeps handling everything else
+vim.lsp.config("oxfmt", {
+	cmd = function(dispatchers, config)
+		local local_bin = vim.fs.joinpath(config.root_dir or "", "node_modules", ".bin", "oxfmt")
+		local bin = vim.uv.fs_stat(local_bin) and local_bin or "oxfmt"
+		return vim.lsp.rpc.start({ bin, "--lsp" }, dispatchers, { cwd = config.root_dir })
+	end,
+	filetypes = { "typescript", "typescriptreact", "json", "css", "html", "markdown" },
+	-- only activate where the marker exists; not calling on_dir keeps oxfmt off
+	-- buffers in repos still on prettier
+	root_dir = function(bufnr, on_dir)
+		local root = vim.fs.root(bufnr, ".oxfmtrc.json")
+		if root then
+			on_dir(root)
+		end
+	end,
+})
+
 vim.api.nvim_create_autocmd("BufWritePre", {
 	callback = function(args)
-		local efm = vim.lsp.get_clients({ name = "efm", bufnr = args.buf })
-		if vim.tbl_isempty(efm) then
-			return
+		for _, name in ipairs({ "oxfmt", "efm" }) do
+			if not vim.tbl_isempty(vim.lsp.get_clients({ name = name, bufnr = args.buf })) then
+				vim.lsp.buf.format({ name = name, async = false })
+				return
+			end
 		end
-		vim.lsp.buf.format({ name = "efm", async = false })
 	end,
 })
 
@@ -292,7 +312,7 @@ vim.lsp.config("lua", {
 -- 	},
 -- })
 
-vim.lsp.enable({ "efm", "vtsls", "lua" })
+vim.lsp.enable({ "efm", "oxfmt", "vtsls", "lua" })
 
 -- treesitter
 local treesitter_languages = {
