@@ -1,54 +1,207 @@
 tap "aws/tap"
+tap "cloudflare/cloudflare"
 tap "github/gh"
-tap "homebrew/bundle"
-tap "homebrew/cask"
-tap "homebrew/cask-drivers"
-tap "homebrew/cask-fonts"
-tap "homebrew/core"
-tap "homebrew/services"
+tap "localazy/tools"
 tap "stripe/stripe-cli"
-brew "ack"
+# Cryptography and SSL/TLS Toolkit
+brew "openssl@3"
+# Official Amazon AWS command-line interface
 brew "awscli"
+# Incrementally update/translate your Strings files
+brew "bartycrouch"
+# Text-based UI library
+brew "ncurses"
+# Clone of cat(1) with syntax highlighting and Git integration
+brew "bat"
+# Get/set bluetooth power and discoverable state
+brew "blueutil"
+# Official command-line tool for CircleCI
 brew "circleci"
+# Cloudflare Tunnel client (formerly Argo Tunnel)
+brew "cloudflared"
+# Cross-platform make
+brew "cmake"
+# Dependency manager for Cocoa projects
 brew "cocoapods"
+# Lightweight, framework-agnostic database migration tool
+brew "dbmate"
+# Diff that understands syntax
+brew "difftastic"
+# Load/unload environment variables based on $PWD
 brew "direnv"
+# Pack, ship and run any application as a lightweight container
+brew "docker"
+# View disk space usage and delete unwanted data, fast
+brew "dua-cli"
+# General purpose Language Server
+brew "efm-langserver"
+# Simple, fast and user-friendly alternative to find
+brew "fd"
+# Standalone library of the Fraunhofer FDK AAC code from Android
+brew "fdk-aac"
+# High quality MPEG Audio Layer III (MP3) encoder
+brew "lame"
+# VP8/VP9 video codec
+brew "libvpx"
+# Audio codec
+brew "opus"
+# Play, record, convert, and stream select audio and video codecs
+brew "ffmpeg"
+# Command-line tools for fly.io services
+brew "flyctl"
+# Fast and simple Node.js version manager
 brew "fnm"
+# Command-line fuzzy finder written in Go
 brew "fzf"
+# GitHub command-line tool
 brew "gh"
+# Library for JPEG-2000 image manipulation
+brew "openjpeg"
+# Interpreter for PostScript and PDF
+brew "ghostscript"
+# Distributed revision control system
 brew "git"
+# Automatic git commit --fixup
+brew "git-absorb"
+# Syntax-highlighting pager for git and diff output
+brew "git-delta"
+# Audit git repos for secrets
+brew "gitleaks"
+# Open source programming language to build simple/reliable/efficient software
+brew "go"
+# Ping, but with a graph
+brew "gping"
+# Improved top (interactive process viewer)
 brew "htop"
+# User-friendly cURL replacement (command-line HTTP client)
 brew "httpie"
+# Tools and libraries to manipulate images in select formats
+brew "imagemagick"
+# Update of iperf: measures TCP, UDP, and SCTP bandwidth
+brew "iperf3"
+# Lightweight and flexible command-line JSON processor
 brew "jq"
-brew "neovim"
-brew "postgresql"
+# Simple terminal UI for git commands
+brew "lazygit"
+# Library to communicate with iOS devices natively
+brew "libimobiledevice"
+# LLM inference in C/C++
+brew "llama.cpp"
+# Next-gen compiler infrastructure
+brew "llvm"
+# Mac App Store command-line interface
+brew "mas"
+# Simple tool to make locally trusted development certificates
+brew "mkcert"
+# Open-source, cross-platform JavaScript runtime environment
+brew "node"
+# Incremental parsing library
+brew "tree-sitter"
+# Ambitious Vim-fork focused on extensibility and agility
+brew "neovim", args: ["HEAD"]
+# Port scanning utility for large networks
+brew "nmap"
+# Search tool like grep and The Silver Searcher
+brew "ripgrep"
+# AI coding agent, built for the terminal
+brew "opencode"
+# H.264 codec from Cisco
+brew "openh264"
+# Open-source vector similarity search for Postgres
+brew "pgvector"
+# Object-relational database system
+brew "postgresql@17", restart_service: :changed
+# Python version management
 brew "pyenv"
-brew "rbenv"
-brew "reattach-to-user-namespace"
-brew "ruby"
-brew "telnet"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.10"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.9"
+# Rust toolchain installer
+brew "rustup"
+# Command-line interface for https://speedtest.net bandwidth tests
+brew "speedtest-cli"
+# Simplified and community-driven man pages
 brew "tldr"
+# Terminal multiplexer
 brew "tmux"
+# Display directories as trees (with optional color/HTML output)
 brew "tree"
+# Extremely fast Python package installer and resolver, written in Rust
+brew "uv"
+# Executes a program periodically, showing output fullscreen
 brew "watch"
+# Internet file retriever
 brew "wget"
+# Tool for managing your YubiKey configuration
+brew "ykman"
+# Process YAML, JSON, XML, CSV and properties documents from the CLI
 brew "yq"
-brew "stripe/stripe-cli/stripe"
-cask "charles"
+# UNIX shell (command interpreter)
+brew "zsh"
+# Command-line interface for 1Password
+cask "1password-cli"
+# Tools for building Android applications
+cask "android-studio"
+# OpenAI's official ChatGPT desktop app
+cask "chatgpt"
+# Automated testing of webapps for Google Chrome
+cask "chromedriver"
+# App to build and share containerised applications and microservices
+cask "docker-desktop"
+# Collaborative team software
+cask "figma"
+cask "font-inconsolata"
+cask "font-inconsolata-nerd-font"
 cask "font-iosevka-nerd-font"
 cask "font-iosevka-term-nerd-font"
+# GIT client
+cask "fork"
+# Terminal emulator that uses platform-native UI and GPU acceleration
+cask "ghostty"
+# Web browser
+cask "google-chrome"
+# HTTP and GraphQL Client
+cask "insomnia"
+# GPU-based terminal emulator
 cask "kitty"
+# Tool to control external monitor brightness & volume
 cask "monitorcontrol"
+# Reverse proxy, secure introspectable tunnels to localhost
 cask "ngrok"
-mas "1Password 7", id: 1333542190
+# Colour picker for colours onscreen
+cask "pika"
+# CLI to create, run, and deploy Slack apps
+cask "slack-cli"
+# Music streaming service
+cask "spotify"
+# Free and open-source OpenVPN client
+cask "tunnelblick"
+# Multimedia player
+cask "vlc"
+# Native desktop client for WhatsApp
+cask "whatsapp"
+mas "1Blocker", id: 1365531024
+mas "1Password for Safari", id: 1569813296
+mas "Darkroom", id: 953286746
 mas "Divvy", id: 413857545
-mas "Evernote", id: 406056744
-mas "GlucoGram", id: 1107429772
-mas "Grammarly for Safari", id: 1462114288
+mas "Infuse", id: 1136220934
 mas "Keynote", id: 409183694
-mas "Messenger", id: 1480068668
 mas "Numbers", id: 409203825
 mas "Pages", id: 409201541
-mas "Reeder", id: 880001334
+mas "RCT Classic+", id: 6702028686
+mas "Reeder", id: 6475002485
+mas "Sauce for Strava™", id: 1570922521
 mas "Slack", id: 803453959
-mas "Trello", id: 1278508951
+mas "The Unarchiver", id: 425424353
+mas "Things", id: 904280696
+mas "WhatsApp", id: 310633997
 mas "Xcode", id: 497799835
+mas "Yubico Authenticator", id: 1497506650
+cargo "deploy-to", source: "ssh://git@github.com/lookback/lookback-deploy-to-rs?branch=main"
+cargo "lol", source: "ssh://git@ssh.github.com:443/lookback/lol-cli.git"
+cargo "tree-sitter-cli"
+npm "@openai/codex"
+npm "corepack"
+npm "typescript-language-server"
+npm "typescript"
