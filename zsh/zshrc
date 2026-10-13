@@ -85,9 +85,6 @@ export PATH="$HOME/.bin:$PATH"
 # Postgres
 export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"
 
-# Ruby
-export PATH="/opt/homebrew/opt/ruby@3.3/bin:$PATH"
-
 # Rust
 export PATH="$HOME/.cargo/bin:$PATH"
 
