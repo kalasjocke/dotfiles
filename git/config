@@ -1,21 +1,13 @@
 [user]
-  name = Joakim Ekberg
-  email = joakim@lookback.io
-[branch]
-  autosetuprebase = always
-[filter "lfs"]
-  process = git-lfs filter-process
-  required = true
-  clean = git-lfs clean -- %f
-  smudge = git-lfs smudge -- %f
-[merge]
-  ff = only
-[push]
-  followTags = true
-[log]
-  abbrevCommit = true
-  decorate = true
-[pull]
-  ff = only
-[alias]
-  praise = blame
+	name = Joakim Ekberg
+	email = joakim@lookback.io
+[diff]
+	external = difft
+[init]
+	defaultBranch = main
+[credential "https://github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
