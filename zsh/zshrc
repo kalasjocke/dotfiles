@@ -70,8 +70,8 @@ export FZF_DEFAULT_OPTS="--no-separator"
 export FZF_CTRL_R_OPTS='--height 12'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-# Use agr to find replace using ag
-function agr { ag -0 -l "$1" | AGR_FROM="$1" AGR_TO="$2" xargs -0 perl -pi -e 's/$ENV{AGR_FROM}/$ENV{AGR_TO}/g'; }
+# Find and replace across files: agr <from> <to>
+function agr { rg -0 -l "$1" . | AGR_FROM="$1" AGR_TO="$2" xargs -0 perl -pi -e 's/$ENV{AGR_FROM}/$ENV{AGR_TO}/g'; }
 
 # Enable vim mode
 bindkey -v
