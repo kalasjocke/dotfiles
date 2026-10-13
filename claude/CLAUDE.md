@@ -9,8 +9,14 @@
   than asserting success. If something is skipped or failing, say so plainly.
 - **Verify history rewrites.** After a squash / reword / rebase, confirm the tree
   is unchanged (e.g. `git diff <old-tip> HEAD` is empty) before reporting done.
+- **Keep commit messages true to their commits.** Folding changes in, or
+  renaming things across history, reuses the old messages verbatim — reread
+  every rewritten commit's message and update any that no longer describe it.
 - **Keep the PR in sync.** When pushing to a remote branch that has an open PR,
   update the PR copy (title/description) to match the current commits.
+- **Don't merge or release unless I say so.** Merging a branch or PR, or cutting
+  a release, is my call — even when it's reviewed, green and pushed. Pushing
+  when asked is fine; stop there.
 
 # Git commit messages
 
@@ -18,6 +24,12 @@ Write commit-message **bodies** as bullet lists wrapped at ~80 columns:
 
 - Subject → blank line → an optional short lead-in ending in a colon → `- `
   bullets (continuation lines indented 2 spaces) → blank line → trailer.
-- ~80 col is a *soft* target: don't hard-wrap at the cost of readability, and
+- ~80 col is a _soft_ target: don't hard-wrap at the cost of readability, and
   never collapse a bulleted body back into one paragraph.
 - Reference for the style: mcu commit `577a063de`.
+- Keep the number of bullets to a minimum. Preferably not more than five per commit.
+
+# Git branches
+
+- Prefix every new branch with `feature/` or `fix/`, in every repo, e.g.
+  `fix/public-link-redirect-keeps-start-time`.
