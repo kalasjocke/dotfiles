@@ -3,12 +3,10 @@ vim.pack.add({
 	"https://github.com/creativenull/efmls-configs-nvim",
 	"https://github.com/mason-org/mason.nvim",
 	"https://github.com/christoomey/vim-tmux-navigator",
-	"https://github.com/editorconfig/editorconfig-vim",
 	"https://github.com/tpope/vim-fugitive",
 	"https://github.com/tpope/vim-rhubarb",
 	"https://github.com/tpope/vim-eunuch",
 	"https://github.com/tpope/vim-surround",
-	"https://github.com/tomtom/tcomment_vim",
 	"https://github.com/scrooloose/nerdtree",
 	"https://github.com/windwp/nvim-autopairs",
 	{ src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
@@ -16,11 +14,9 @@ vim.pack.add({
 	"https://github.com/ibhagwan/fzf-lua",
 	"https://github.com/lukas-reineke/indent-blankline.nvim",
 	{ src = "https://github.com/saghen/blink.cmp", version = "v1.10.2" },
-	"https://github.com/folke/snacks.nvim",
 	"https://github.com/coder/claudecode.nvim",
 	"https://github.com/lewis6991/gitsigns.nvim",
 	"https://github.com/folke/trouble.nvim",
-	"https://github.com/rebelot/kanagawa.nvim",
 })
 
 -- options
@@ -67,15 +63,6 @@ vim.keymap.set("x", "<C-l>", "<Cmd>TmuxNavigateRight<CR>")
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
 local au = vim.api.nvim_create_augroup("MyAutocmds", { clear = true })
-
--- set 0 fold in typescript
--- vim.api.nvim_create_autocmd("FileType", {
--- 	group = au,
--- 	pattern = "typescript",
--- 	callback = function()
--- 		vim.opt_local.foldlevel = 0
--- 	end,
--- })
 
 -- Have } and { navigate past folds
 vim.keymap.set("n", "}", function()
@@ -205,10 +192,6 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 })
 
 -- typescript
--- vim.lsp.config("tsserver", {
--- 	cmd = { "typescript-language-server", "--stdio" },
--- 	filetypes = { "typescript", "typescriptreact" },
--- })
 vim.lsp.config("vtsls", {
 	cmd = { "vtsls", "--stdio" },
 	filetypes = { "typescript", "typescriptreact" },
@@ -343,13 +326,15 @@ local treesitter_languages = {
 	"markdown_inline",
 	"rust",
 	"typescript",
+	"typescriptreact",
 }
 require("nvim-treesitter").setup()
 
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = treesitter_languages,
 	callback = function()
-		vim.treesitter.start()
+		-- a missing parser (e.g. not built yet) falls back to regular syntax
+		pcall(vim.treesitter.start)
 	end,
 })
 
@@ -365,23 +350,8 @@ require("blink.cmp").setup({
 		preset = "enter",
 		["<C-k>"] = { "select_prev", "fallback" },
 		["<C-j>"] = { "select_next", "fallback" },
-		["<Tab>"] = {
-			"snippet_forward",
-			-- function()
-			-- 	return require("sidekick").nes_jump_or_apply()
-			-- end,
-			"fallback",
-		},
+		["<Tab>"] = { "snippet_forward", "fallback" },
 	},
-})
-
--- snacks
-require("snacks").setup({
-	-- default settings
-	-- enable = true,
-	-- timeout = 1000,
-	-- message = "Saved",
-	-- position = "top",
 })
 
 -- claudecode
@@ -486,6 +456,5 @@ require("trouble").setup({
 	},
 })
 vim.keymap.set("n", "<leader>c", "<cmd>Trouble close<cr>")
-vim.keymap.set("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>")
 vim.keymap.set("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>")
 vim.keymap.set("n", "<leader>xq", "<cmd>Trouble qflist toggle<cr>")
