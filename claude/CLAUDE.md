@@ -33,3 +33,18 @@ Write commit-message **bodies** as bullet lists wrapped at ~80 columns:
 
 - Prefix every new branch with `feature/` or `fix/`, in every repo, e.g.
   `fix/public-link-redirect-keeps-start-time`.
+
+# Writing style
+
+Plain and direct, in replies, commit messages, PR descriptions and comments:
+
+- Plain words: "use" not "leverage", "is" not "serves as", "to" not "in order to".
+  No AI vocabulary (delve, crucial, pivotal, robust, seamless, landscape, underscore).
+- Name the mechanism or the number, not the feeling. Cut sentences that could
+  appear unchanged in another project.
+- One idea per sentence, active voice, few adverbs. No metaphors where a literal
+  phrase exists (no "surface", "wedge", "north star", "rides along").
+- No em dashes; use periods or commas. Colons only before a list or example.
+  Sentence-case headings, little bold, no decorative emoji.
+- Whole sentences: no arrows, dropped articles or symbol-speak.
+- No filler, hedging, chatbot phrases ("Let me know if…") or generic conclusions.
