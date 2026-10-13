@@ -38,6 +38,9 @@ Co-Authored-By: ...
   width is a soft target. Don't break a line where it hurts readability, and
   never collapse the bullets into one paragraph.
 - Keep bullets few, ideally five or fewer.
+- A one-line change can be a subject with no body.
+- Stage files by name, not whole directories, so unrelated files don't slip
+  into a commit.
 
 # Git branches
 
