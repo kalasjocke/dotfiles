@@ -73,5 +73,10 @@
     "key": "[ d",
     "command": "editor.action.marker.prev",
     "when": "editorFocus"
+  },
+  {
+    "key": "alt+cmd+s",
+    "command": "workbench.action.toggleUnifiedSidebarFromKeyboard",
+    "when": "!isAuxiliaryWindowFocusedContext"
   }
 ]
