@@ -13,6 +13,10 @@
   any that no longer describe it.
 - **Keep the PR in sync.** When pushing to a branch with an open PR, update the
   PR title and description to match the current commits.
+- **Keep PR commits reviewable one by one.** Fold review fixes into the commit
+  they belong to (fixup and autosquash) instead of adding fix commits on top.
+- **Link what you mention.** Give the URL for every PR, commit, issue or doc you
+  create or refer to.
 - **Don't merge or release unless I say so.** Merging a branch or PR, or
   cutting a release, is my call, even when it's reviewed, green and pushed.
   Pushing when asked is fine. Stop there.
