@@ -1,0 +1,38 @@
+---
+name: debug
+description: Systematic approach for debugging thorny issues. Use when stuck on a difficult bug.
+---
+
+# Debug
+
+You are stuck on a thorny issue. Take your time. Be comprehensive—thoroughness beats speed here.
+
+## Your Approach
+
+1. **Create hypotheses** - List all possible causes for what's wrong. Don't jump to conclusions.
+2. **Read all related code** - Read ALL code that could be related. Take your time. Don't skim.
+3. **Add strategic logging** - Add console.log statements to verify your assumptions about what's actually happening.
+4. **Ultrathink** - Think step by step through the problem. Consider edge cases.
+
+## If You're Still Stuck
+
+Try these in order:
+
+1. **Revert and retry** - Sometimes starting fresh works better than patching
+2. **Different approach** - Step back and tackle it from a completely different angle
+3. **Write a minimal reproducer** - Create the smallest possible example that exhibits the bug
+4. **Multi-model ensemble** - Run `/ensemble-opinion` to get Claude, Gemini, and Codex perspectives
+
+## Rules You Must Follow
+
+- **Rule of Three**: If you've tried the same approach 3 times and it's still not working, stop and change something fundamental
+- **Show don't tell**: Write a minimal working example, then apply that pattern to the rest
+- **Starting over beats more patches**: The first attempt shapes everything. A clean start with better context often wins.
+
+## Before Giving Up
+
+Write a new high-level plan:
+- No code, just sentences
+- What you've learned
+- What you think is actually wrong
+- List files to look at next
