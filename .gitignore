@@ -2,3 +2,8 @@ ssh
 config/nvim/plugged
 .DS_Store
 zshrc.local
+
+# Files that hold credentials
+config/gh/hosts.yml
+config/op
+config/stripe
