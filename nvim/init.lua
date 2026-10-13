@@ -16,8 +16,6 @@ vim.pack.add({
 	"https://github.com/ibhagwan/fzf-lua",
 	"https://github.com/lukas-reineke/indent-blankline.nvim",
 	{ src = "https://github.com/saghen/blink.cmp", version = "v1.10.2" },
-	-- "https://github.com/zbirenbaum/copilot.lua",
-	-- "https://github.com/copilotlsp-nvim/copilot-lsp",
 	"https://github.com/folke/snacks.nvim",
 	"https://github.com/coder/claudecode.nvim",
 	"https://github.com/lewis6991/gitsigns.nvim",
@@ -330,39 +328,6 @@ vim.lsp.config("lua", {
 	filetypes = { "lua" },
 	settings = { Lua = { diagnostics = { globals = { "vim" } } } },
 })
-
--- copilot
--- vim.lsp.config("copilot", {
--- 	cmd = { "copilot-language-server", "--stdio" },
--- })
-
--- copilot.lua
--- require("copilot").setup({
--- 	suggestion = {
--- 		enabled = true,
--- 		auto_trigger = true,
--- 		keymap = {
--- 			accept = "<Tab>",
--- 		},
--- 	},
--- 	nes = {
--- 		enabled = false,
--- 		auto_trigger = false,
--- 		keymap = {
--- 			accept_and_goto = "<leader>s",
--- 			accept = false,
--- 			dismiss = false,
--- 		},
--- 	},
--- 	filetypes = {
--- 		typescript = true,
--- 		typescriptreact = true,
--- 		json = true,
--- 		lua = true,
--- 		gitcommit = true,
--- 		["*"] = false,
--- 	},
--- })
 
 vim.lsp.enable({ "efm", "oxfmt", "vtsls", "lua" })
 
