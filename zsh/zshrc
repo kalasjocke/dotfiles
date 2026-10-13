@@ -68,7 +68,6 @@ setopt hist_ignore_all_dups
 # fzf zsh integration
 export FZF_DEFAULT_OPTS="--no-separator"
 export FZF_CTRL_R_OPTS='--height 12'
-export FZF_DEFAULT_COMMAND='ag -g ""'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # Use agr to find replace using ag
@@ -90,12 +89,12 @@ export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"
 export PATH="/opt/homebrew/opt/ruby@3.3/bin:$PATH"
 
 # Rust
-export PATH="/Users/$USER/.cargo/bin:$PATH"
+export PATH="$HOME/.cargo/bin:$PATH"
 
 # Bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
-[ -s "/Users/joakim/.bun/_bun" ] && source "/Users/joakim/.bun/_bun"
+[ -s "$BUN_INSTALL/_bun" ] && source "$BUN_INSTALL/_bun"
 
 # Claude
 export PATH="$HOME/.local/bin:$PATH"
@@ -103,72 +102,3 @@ export PATH="$HOME/.local/bin:$PATH"
 # Source machine-specific secrets
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
-# Create a new clone and branch for parallel development.
-# Usage: ga <branch-name> [base-branch]
-ra() {
-  if [[ -z "$1" ]]; then
-    echo "Usage: ga <branch-name> [base-branch]"
-    return 1
-  fi
-  local branch="$1"
-  local repo_name="$(basename "$PWD")"
-  local repo_url="$(git remote get-url origin)"
-  local clone_path="../${repo_name}-${branch}"
-
-  # Use fzf to select base branch, defaulting to main
-  local base_branch="$(git branch -r --format='%(refname:short)' | sed 's|origin/||' | fzf --height=20 --prompt='Select base branch: ' --query="main")"
-
-  # If fzf was cancelled, fall back to main
-  if [[ -z "$base_branch" ]]; then
-    base_branch="main"
-  fi
-
-  echo "Creating clone at $clone_path from $base_branch..."
-
-  # Clone with reference to current repo for speed/space savings
-  git clone --reference "$PWD" "$repo_url" "$clone_path"
-
-  # Enter clone and set up branch
-  cd "$clone_path"
-  git checkout "$base_branch"
-  # git checkout -b "je/$branch"
-
-  # echo "Created clone at $clone_path on branch je/$branch (based on $base_branch)"
-  echo "Created clone at $clone_path on branch $base_branch"
-}
-
-# Remove a cloned repo directory. Warns if there are uncommitted changes.
-# Run from within the clone you want to delete.
-rd() {
-  local cwd="$(pwd)"
-  local clone_name="$(basename "$cwd")"
-
-  # Check for uncommitted changes
-  if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
-    echo "⚠️  Warning: You have uncommitted changes:"
-    git status --short
-    echo ""
-    if ! gum confirm "Delete anyway?"; then
-      echo "Aborted"
-      return 1
-    fi
-  fi
-
-  # Check for unpushed commits
-  local unpushed="$(git log --oneline @{upstream}..HEAD 2>/dev/null)"
-  if [[ -n "$unpushed" ]]; then
-    echo "⚠️  Warning: You have unpushed commits:"
-    echo "$unpushed"
-    echo ""
-    if ! gum confirm "Delete anyway?"; then
-      echo "Aborted"
-      return 1
-    fi
-  fi
-
-  if gum confirm "Remove clone '$clone_name'?"; then
-    cd ..
-    rm -rf "$clone_name"
-    echo "Removed $clone_name"
-  fi
-}
