@@ -7,3 +7,6 @@ zshrc.local
 config/gh/hosts.yml
 config/op
 config/stripe
+
+# Written by brew bundle
+Brewfile.lock.json
