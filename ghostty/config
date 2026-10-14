@@ -1,0 +1,32 @@
+font-family = Hack
+font-size = 16
+font-thicken = true
+
+# Draw symbols the font lacks with the same fonts as kitty: the ※ in Claude
+# Code's recap, the ⏵ in its status line and its ✻ and ✳ spinners
+# font-codepoint-map = U+203B=Monaco
+# font-codepoint-map = U+23F5=STIX Two Math
+# font-codepoint-map = U+2733,U+273B=Menlo
+
+# kitty rounds Menlo's 37.25 px line height up to 38, Ghostty down to 37
+# adjust-cell-height = 1
+
+theme = Rose Pine
+
+# Override cursor to bright white
+cursor-color = #ffffff
+cursor-text = #191724
+cursor-style-blink = false
+
+# Hide the mouse pointer while typing, like kitty does after a few idle seconds
+mouse-hide-while-typing = true
+
+# kitty has no padding by default. Keep a small gap at the top only.
+window-padding-x = 0
+window-padding-y = 2,0
+
+# Hide the titlebar and its buttons so the terminal fills the window
+macos-titlebar-style = hidden
+
+# Hide the grab handle for dragging Ghostty splits, since splits live in tmux
+drag-handle = never

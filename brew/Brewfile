@@ -151,6 +151,7 @@ cask "chromedriver"
 cask "docker-desktop"
 # Collaborative team software
 cask "figma"
+cask "font-hack"
 cask "font-inconsolata"
 cask "font-inconsolata-nerd-font"
 cask "font-iosevka-nerd-font"
@@ -158,7 +159,7 @@ cask "font-iosevka-term-nerd-font"
 # GIT client
 cask "fork"
 # Terminal emulator that uses platform-native UI and GPU acceleration
-cask "ghostty"
+cask "ghostty@tip"
 # Web browser
 cask "google-chrome"
 # HTTP and GraphQL Client
