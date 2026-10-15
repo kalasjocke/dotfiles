@@ -1,12 +1,7 @@
 ssh
-config/nvim/plugged
+nvim/plugged
 .DS_Store
 zshrc.local
-
-# Files that hold credentials
-config/gh/hosts.yml
-config/op
-config/stripe
 
 # Written by brew bundle
 Brewfile.lock.json
