@@ -111,6 +111,8 @@ brew "openh264"
 brew "pgvector"
 # Object-relational database system
 brew "postgresql@17", restart_service: :changed
+# Pretty, minimal and fast ZSH prompt
+brew "pure"
 # Python version management
 brew "pyenv"
 # Interpreted, interactive, object-oriented programming language
