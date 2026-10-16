@@ -16,7 +16,8 @@
 - **Keep PR commits reviewable one by one.** Fold review fixes into the commit
   they belong to (fixup and autosquash) instead of adding fix commits on top.
 - **Link what you mention.** Give the URL for every PR, commit, issue or doc you
-  create or refer to.
+  create or refer to. Write a PR number as a link to that PR, for example
+  `[#123](https://github.com/<org>/<repo>/pull/123)`, never as a bare `#123`.
 - **Don't merge or release unless I say so.** Merging a branch or PR, or
   cutting a release, is my call, even when it's reviewed, green and pushed.
   Pushing when asked is fine. Stop there.
