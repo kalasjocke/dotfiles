@@ -22,7 +22,7 @@ cursor-style-blink = false
 mouse-hide-while-typing = true
 
 # kitty has no padding by default. Keep a small gap at the top only.
-window-padding-x = 0
+window-padding-x = 2,0
 window-padding-y = 2,0
 
 # Hide the titlebar and its buttons so the terminal fills the window
