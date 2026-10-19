@@ -72,19 +72,33 @@ source <(fzf --zsh)
 # Find and replace across files: agr <from> <to>
 function agr { rg -0 -l "$1" . | AGR_FROM="$1" AGR_TO="$2" xargs -0 perl -pi -e 's/$ENV{AGR_FROM}/$ENV{AGR_TO}/g'; }
 
-# cd to the current folder of the Claude Code session in this tmux window.
-# Claude records each session's folder in ~/.claude/sessions/<pid>.json, and
-# titles the pane showing a session with the session's name, sometimes after a
-# status symbol like "✳ ".
+# cd to where the Claude Code session in this tmux window is working. Claude
+# records each session's folder in ~/.claude/sessions/<pid>.json, and titles
+# the pane showing a session with the session's name, sometimes after a status
+# symbol like "✳ ". A session can also work elsewhere by starting its shell
+# commands with cd, so the end of its transcript decides: the last cd or
+# change of the session's folder wins.
 function cdc {
-  local pane tty title dir cwd
+  local pane tty title dir sid cwd last
+  local -a transcript
   while IFS=$'\t' read -r pane tty title dir; do
     ps -t "$tty" -o args= | grep -qE '(^|/)claude( |$)' || continue
-    cwd=$(jq -rs --arg t "$title" --arg p "$pane" '
+    IFS=$'\t' read -r sid cwd < <(jq -rs --arg t "$title" --arg p "$pane" '
       (map(select((.name // "") as $n | $n != "" and ($t == $n or ($t | endswith(" " + $n)))))
         | sort_by(-(.updatedAt // 0)))
       + map(select((.tmux // "") | endswith("." + $p)))
-      | .[0].cwd // empty' ~/.claude/sessions/*.json(N) 2>/dev/null)
+      | .[0] // empty | "\(.sessionId)\t\(.cwd)"' ~/.claude/sessions/*.json(N) 2>/dev/null)
+    transcript=(~/.claude/projects/*/$sid.jsonl(N))
+    if [[ -n $sid && -n $transcript ]]; then
+      last=$(tail -n 300 $transcript[1] | jq -Rr '
+        fromjson? | (.cwd // empty | "cwd\t\(.)"),
+        (.message.content[]? | select(.type? == "tool_use" and .name == "Bash") | .input.command
+          | scan("(?:^|[;&|(]\\s*)cd\\s+(\"[^\"]+\"|[~/][^\\s;&|)]*)") | "cd\t\(.[0])")' |
+        awk -F'\t' '$1 == "cwd" { if ($2 != prev) last = prev = $2; next } { last = $2 } END { print last }')
+      last=${${last#\"}%\"}
+      last=${last/#\~/$HOME}
+      [[ -d $last ]] && cwd=$last
+    fi
     cd "${cwd:-$dir}" && return
   done < <(tmux list-panes -t "$TMUX_PANE" -F $'#{pane_id}\t#{pane_tty}\t#{pane_title}\t#{pane_current_path}')
   echo "No Claude Code session in this tmux window" >&2
