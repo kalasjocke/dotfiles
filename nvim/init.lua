@@ -352,6 +352,14 @@ require("blink.cmp").setup({
 		["<C-j>"] = { "select_next", "fallback" },
 		["<Tab>"] = { "snippet_forward", "fallback" },
 	},
+	completion = {
+		menu = {
+			-- in markdown, only show the menu after a pause in typing
+			auto_show_delay_ms = function()
+				return vim.bo.filetype == "markdown" and 350 or 0
+			end,
+		},
+	},
 })
 
 -- claudecode
