@@ -406,6 +406,9 @@ end)
 
 -- gitsigns
 require("gitsigns").setup({
+	-- gitsigns can't read 'diffopt' on nvim 0.13 and falls back to an external
+	-- git diff, which diff.external = difft breaks. Use the internal diff.
+	diff_opts = { internal = true },
 	on_attach = function(bufnr)
 		local gs = package.loaded.gitsigns
 		local opts = { buffer = bufnr }
@@ -423,6 +426,9 @@ require("gitsigns").setup({
 		vim.keymap.set("n", "<leader>gr", gs.reset_hunk, opts)
 		vim.keymap.set("n", "<leader>gu", gs.undo_stage_hunk, opts)
 		vim.keymap.set("n", "<leader>gp", gs.preview_hunk, opts)
+		vim.keymap.set("n", "<leader>gl", function()
+			gs.toggle_deleted(gs.toggle_linehl())
+		end, opts)
 		vim.keymap.set("n", "<leader>gS", gs.stage_buffer, opts)
 		vim.keymap.set("n", "<leader>gR", gs.reset_buffer, opts)
 
