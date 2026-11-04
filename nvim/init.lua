@@ -209,11 +209,16 @@ vim.api.nvim_create_autocmd("LspAttach", {
 	group = au,
 	callback = function(args)
 		local client = vim.lsp.get_client_by_id(args.data.client_id)
-		if not client or client.name ~= "vtsls" or not client.root_dir or client._external_watcher then
+		if not client or client.name ~= "vtsls" or client._external_watcher then
 			return
 		end
 		local root = client.root_dir
 		local event, timer = vim.uv.new_fs_event(), vim.uv.new_timer()
+		if not root or not event or not timer then
+			return
+		end
+		-- stored on the client so it survives reloading the config
+		---@diagnostic disable-next-line: inject-field
 		client._external_watcher = event
 		event:start(root, { recursive = true }, function(err, filename)
 			if err or not filename then
@@ -280,7 +285,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
 vim.lsp.config("lua", {
 	cmd = { "lua-language-server" },
 	filetypes = { "lua" },
-	settings = { Lua = { diagnostics = { globals = { "vim" } } } },
+	-- point the server at Neovim's runtime so it knows the types of the vim.* API
+	settings = {
+		Lua = {
+			runtime = { version = "LuaJIT" },
+			workspace = { library = { vim.env.VIMRUNTIME }, checkThirdParty = false },
+		},
+	},
 })
 
 vim.lsp.enable({ "efm", "oxfmt", "vtsls", "lua" })
