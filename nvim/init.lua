@@ -21,7 +21,6 @@ vim.pack.add({
 
 -- options
 vim.opt.number = true
-vim.opt.wrap = true
 vim.opt.tabstop = 2
 vim.opt.softtabstop = 2
 vim.opt.shiftwidth = 2
@@ -48,10 +47,11 @@ require("fzf-lua").setup({
 })
 
 -- keymaps
-vim.keymap.set("n", "<leader>o", ":update<CR> :source<CR>")
+vim.keymap.set("n", "<leader>o", ":update<CR>:source<CR>")
 vim.keymap.set("n", "<leader>w", ":write<CR>")
 vim.keymap.set("n", "<leader>q", ":quit<CR>")
-vim.keymap.set({ "n", "v" }, "\\", "gcc", { remap = true })
+vim.keymap.set("n", "\\", "gcc", { remap = true })
+vim.keymap.set("x", "\\", "gc", { remap = true })
 vim.keymap.set("n", "<leader>t", require("fzf-lua").files)
 vim.keymap.set("n", "<leader>f", require("fzf-lua").live_grep)
 vim.keymap.set("n", "<leader>s", require("fzf-lua").lsp_live_workspace_symbols)
@@ -68,12 +68,12 @@ local au = vim.api.nvim_create_augroup("MyAutocmds", { clear = true })
 vim.keymap.set("n", "}", function()
 	local ln = vim.fn.search("^$", "Wn")
 	return vim.fn.foldclosed(ln) == -1 and "}" or "}j}"
-end, { expr = true, noremap = true })
+end, { expr = true })
 
 vim.keymap.set("n", "{", function()
 	local ln = vim.fn.search("^$", "Wnb")
 	return vim.fn.foldclosed(ln) == -1 and "{" or "{k{"
-end, { expr = true, noremap = true })
+end, { expr = true })
 
 -- restore cursor position when reopening a file
 vim.api.nvim_create_autocmd("BufReadPost", {
@@ -86,19 +86,10 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 	end,
 })
 
--- set spell in markdown
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-	group = au,
-	pattern = "*.md",
-	callback = function()
-		vim.opt_local.spell = true
-	end,
-})
-
--- set spell in gitcommit
+-- set spell in markdown and git commit messages
 vim.api.nvim_create_autocmd("FileType", {
 	group = au,
-	pattern = "gitcommit",
+	pattern = { "markdown", "gitcommit" },
 	callback = function()
 		vim.opt_local.spell = true
 	end,
@@ -113,10 +104,7 @@ vim.api.nvim_create_autocmd({ "FocusGained" }, {
 -- resize splits on window resize
 vim.api.nvim_create_autocmd("VimResized", {
 	group = au,
-	pattern = "*",
-	callback = function()
-		vim.cmd("wincmd =")
-	end,
+	command = "wincmd =",
 })
 
 -- Make diagnostics show on jump
@@ -181,6 +169,7 @@ vim.lsp.config("oxfmt", {
 })
 
 vim.api.nvim_create_autocmd("BufWritePre", {
+	group = au,
 	callback = function(args)
 		for _, name in ipairs({ "oxfmt", "efm" }) do
 			if not vim.tbl_isempty(vim.lsp.get_clients({ name = name, bufnr = args.buf })) then
@@ -249,44 +238,26 @@ vim.api.nvim_create_autocmd("LspAttach", {
 	end,
 })
 
-local definition_vsplit = function()
-	local client = vim.lsp.get_clients({ bufnr = 0, method = "textDocument/definition" })[1]
-	if not client then
-		return
-	end
-	local encoding = client.offset_encoding
-
-	vim.lsp.buf_request(
-		0,
-		"textDocument/definition",
-		vim.lsp.util.make_position_params(0, encoding),
-		function(_, result)
-			if result == nil or vim.tbl_isempty(result) then
-				return nil
+-- open the definition in a vertical split, with a quickfix list when there
+-- are several
+local function definition_vsplit()
+	vim.lsp.buf.definition({
+		on_list = function(list)
+			vim.cmd("vsplit | wincmd l")
+			vim.fn.setqflist({}, " ", list)
+			vim.cmd("cfirst")
+			if #list.items > 1 then
+				vim.cmd("copen | wincmd p")
 			end
-
-			vim.cmd("vsplit")
-			vim.cmd("wincmd l")
-
-			if vim.islist(result) then
-				vim.lsp.util.show_document(result[1], encoding)
-
-				if #result > 1 then
-					vim.fn.setqflist(vim.lsp.util.locations_to_items(result, encoding))
-					vim.api.nvim_command("copen")
-					vim.api.nvim_command("wincmd p")
-				end
-			else
-				vim.lsp.util.show_document(result, encoding)
-			end
-		end
-	)
+		end,
+	})
 end
 
 vim.api.nvim_create_autocmd("LspAttach", {
+	group = au,
 	callback = function(args)
 		-- lsp keymaps
-		local opts = { noremap = true, silent = true }
+		local opts = { buffer = args.buf, silent = true }
 
 		vim.keymap.set("n", "<leader>h", vim.lsp.buf.hover, opts)
 		vim.keymap.set("n", "gd", "<cmd>Trouble lsp_definitions open<cr>", opts)
@@ -315,7 +286,7 @@ vim.lsp.config("lua", {
 vim.lsp.enable({ "efm", "oxfmt", "vtsls", "lua" })
 
 -- treesitter
-local treesitter_languages = {
+local treesitter_parsers = {
 	"bash",
 	"dockerfile",
 	"graphql",
@@ -326,15 +297,21 @@ local treesitter_languages = {
 	"markdown_inline",
 	"rust",
 	"typescript",
-	"typescriptreact",
+	"tsx",
 }
 require("nvim-treesitter").setup()
+-- installs the parsers that are missing and skips the rest
+require("nvim-treesitter").install(treesitter_parsers)
 
 vim.api.nvim_create_autocmd("FileType", {
-	pattern = treesitter_languages,
-	callback = function()
-		-- a missing parser (e.g. not built yet) falls back to regular syntax
-		pcall(vim.treesitter.start)
+	group = au,
+	callback = function(args)
+		-- parser and filetype names differ, for example tsx is used for typescriptreact
+		local parser = vim.treesitter.language.get_lang(args.match)
+		if vim.list_contains(treesitter_parsers, parser) then
+			-- a missing parser (e.g. not built yet) falls back to regular syntax
+			pcall(vim.treesitter.start, args.buf, parser)
+		end
 	end,
 })
 
