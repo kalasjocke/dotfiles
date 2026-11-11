@@ -3,7 +3,8 @@
 # point into the repo are left alone, and a real file in the way is moved to
 # <name>.backup first.
 #
-# Set SKIP_BREW=1 to only create the links.
+# Set SKIP_BREW=1 to only create the links. Set INSTALL_AWDL=1 to only install
+# the daemon that keeps AWDL down for steadier Wi-Fi ping (asks for sudo).
 
 set -euo pipefail
 
@@ -26,6 +27,19 @@ link() {
   echo "Linked $target"
 }
 
+# The daemon runs as root, so copy it to root-owned files. A symlink into this
+# repo would let anything running as this user change what root runs.
+if [ "${INSTALL_AWDL:-}" = 1 ]; then
+  sudo install -d -o root -g wheel -m 755 /usr/local/sbin
+  sudo install -o root -g wheel -m 755 "$DOTFILES/macos/disable_awdl.sh" /usr/local/sbin/disable_awdl.sh
+  sudo install -o root -g wheel -m 644 "$DOTFILES/macos/local.disable-awdl.plist" \
+    /Library/LaunchDaemons/local.disable-awdl.plist
+  sudo launchctl bootout system/local.disable-awdl 2>/dev/null || true
+  sudo launchctl bootstrap system /Library/LaunchDaemons/local.disable-awdl.plist
+  echo "Installed the daemon that keeps AWDL down"
+  exit
+fi
+
 if [ "${SKIP_BREW:-}" != 1 ]; then
   if ! command -v brew >/dev/null; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -39,7 +53,7 @@ link "$DOTFILES/zsh/zshrc" "$HOME/.zshrc"
 # Every other folder is one app's config folder in ~/.config
 for dir in "$DOTFILES"/*/; do
   name="$(basename "$dir")"
-  case "$name" in brew | claude | zsh) continue ;; esac
+  case "$name" in brew | claude | macos | zsh) continue ;; esac
   link "$DOTFILES/$name" "$HOME/.config/$name"
 done
 
