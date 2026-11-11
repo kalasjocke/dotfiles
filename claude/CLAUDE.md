@@ -68,3 +68,10 @@ Plain and direct, in replies, commit messages, PR descriptions and comments:
 - Whole sentences: no arrows, dropped articles or symbol-speak.
 - No filler, hedging, chatbot phrases ("Let me know if…") or generic
   conclusions.
+
+# Markdown files
+
+- Wrap commit messages and plans at 80 columns, but not PR descriptions. In a
+  PR description, write each paragraph and bullet on one line.
+- In a plan, indent a bullet's continuation lines to line up with its text.
+  Don't wrap headings, tables, code blocks or links that would break.
