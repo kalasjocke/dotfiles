@@ -7,7 +7,6 @@ vim.pack.add({
 	"https://github.com/tpope/vim-rhubarb",
 	"https://github.com/tpope/vim-eunuch",
 	"https://github.com/tpope/vim-surround",
-	"https://github.com/scrooloose/nerdtree",
 	"https://github.com/windwp/nvim-autopairs",
 	{ src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
 	{ src = "https://github.com/nvim-treesitter/nvim-treesitter-textobjects", version = "main" },
@@ -56,6 +55,7 @@ vim.keymap.set("n", "<leader>t", require("fzf-lua").files)
 vim.keymap.set("n", "<leader>f", require("fzf-lua").live_grep)
 vim.keymap.set("n", "<leader>s", require("fzf-lua").lsp_live_workspace_symbols)
 vim.keymap.set("n", "<space>", "za")
+vim.keymap.set("n", "-", "<Plug>(nvim-dir-up)")
 vim.keymap.set("x", "<C-h>", "<Cmd>TmuxNavigateLeft<CR>")
 vim.keymap.set("x", "<C-j>", "<Cmd>TmuxNavigateDown<CR>")
 vim.keymap.set("x", "<C-k>", "<Cmd>TmuxNavigateUp<CR>")
@@ -339,6 +339,29 @@ require("blink.cmp").setup({
 		["<C-k>"] = { "select_prev", "fallback" },
 		["<C-j>"] = { "select_next", "fallback" },
 		["<Tab>"] = { "snippet_forward", "fallback" },
+	},
+	cmdline = {
+		keymap = {
+			preset = "cmdline",
+			-- Enter on a directory in the menu completes into it instead of running the command
+			["<CR>"] = {
+				function(cmp)
+					local item = cmp.is_menu_visible() and cmp.get_selected_item()
+					if not item then
+						return
+					end
+					if item.label:sub(-1) == "/" then
+						return cmp.accept({
+							callback = function()
+								vim.schedule(cmp.show)
+							end,
+						})
+					end
+					return cmp.accept_and_enter()
+				end,
+				"fallback",
+			},
+		},
 	},
 	completion = {
 		menu = {
