@@ -1,14 +1,34 @@
 #!/bin/sh
-# Rings the bell for Claude Code hooks, so tmux flags the window it happened in.
+# Marks the tmux window a Claude Code session runs in as blocked or done, so
+# tmux.conf can color its index in the status bar.
 #
-# Wired to the Notification and Stop hooks in ~/.claude/settings.json. tmux turns
-# the bell into window_bell_flag, which tmux.conf renders by recoloring the
-# window index gold and bold (window-status-bell-style) -- Stop is the one that
-# matters, since it fires when a turn finishes and that is the moment worth
-# noticing from another window.
+# Wired to the Notification and Stop hooks in ~/.claude/settings.json. The state
+# goes in the window option @claude, using the state names of the OSC 7501
+# program status protocol:
 #
-# Hook processes have no controlling terminal, so /dev/tty cannot be written to;
-# the bell has to go to the pane's own tty.
+# - blocked: Claude waits on a permission prompt or a question (Notification).
+# - done: a turn finished and its result is not yet seen (Stop).
+#
+# tmux.conf unsets @claude when the window is selected. tmux does not read OSC
+# 7501 itself yet, which is why this sets the option directly.
+
+input=$(cat)
+
+case $(printf '%s' "$input" | jq -r .hook_event_name) in
+  Stop) state=done ;;
+  Notification)
+    # Prompts, questions and dialogs, in this session or an agent it tracks,
+    # wait on you. idle_prompt fires a minute after Stop and must not turn done
+    # into blocked. agent_completed is covered by Stop, and the other types,
+    # like auth_success and push_notification, need no action.
+    case $(printf '%s' "$input" | jq -r '.notification_type // ""') in
+      permission_prompt | worker_permission_prompt | elicitation_dialog | \
+        elicitation_url_dialog | agent_needs_input | "") state=blocked ;;
+      *) exit 0 ;;
+    esac
+    ;;
+  *) exit 0 ;;
+esac
 
 pane=$TMUX_PANE
 
@@ -17,7 +37,7 @@ pane=$TMUX_PANE
 # after a status symbol like "✳ ". So look up the name from the hook's
 # session_id and find the pane whose title is or ends with that name.
 if [ -z "$pane" ]; then
-  sid=$(jq -r .session_id)
+  sid=$(printf '%s' "$input" | jq -r .session_id)
   name=$(jq -r --arg s "$sid" 'select(.sessionId == $s) | .name' \
     "$HOME"/.claude/sessions/*.json 2>/dev/null | head -1)
   [ -n "$name" ] || exit 0
@@ -27,9 +47,9 @@ if [ -z "$pane" ]; then
 fi
 [ -n "$pane" ] || exit 0
 
-tty=$(tmux display -p -t "$pane" '#{pane_tty}' 2>/dev/null)
-[ -n "$tty" ] || exit 0
+# Leave the window you are looking at alone, as tmux does with the bell flag.
+[ "$(tmux display -p -t "$pane" '#{&&:#{window_active},#{session_attached}}' \
+  2>/dev/null)" = 1 ] && exit 0
 
-# Emits nothing visible, so it cannot disturb the Claude TUI.
-printf '\a' > "$tty" 2>/dev/null
+tmux set -w -t "$pane" @claude "$state" 2>/dev/null
 exit 0
