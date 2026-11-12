@@ -3,8 +3,9 @@
 # point into the repo are left alone, and a real file in the way is moved to
 # <name>.backup first.
 #
-# Set SKIP_BREW=1 to only create the links. Set INSTALL_AWDL=1 to only install
-# the daemon that keeps AWDL down for steadier Wi-Fi ping (asks for sudo).
+# Set SKIP_BREW=1 to only create the links, without Homebrew or Move. Set
+# INSTALL_AWDL=1 to only install the daemon that keeps AWDL down for steadier
+# Wi-Fi ping (asks for sudo).
 
 set -euo pipefail
 
@@ -70,6 +71,15 @@ if [ ! -e "$HOME/.claude/settings.json" ]; then
   echo "Copied $HOME/.claude/settings.json"
 fi
 
+# Move moves windows with hotkeys. Build it only when it's missing; run make
+# install in ~/src/move to update it.
+if [ "${SKIP_BREW:-}" != 1 ] && [ ! -d "$HOME/Applications/Move.app" ]; then
+  if [ ! -d "$HOME/src/move" ]; then
+    git clone https://github.com/kalasjocke/move.git "$HOME/src/move"
+  fi
+  make -C "$HOME/src/move" cert install
+fi
+
 cat <<EOF
 
 Done. Not handled by this script:
@@ -77,4 +87,5 @@ Done. Not handled by this script:
 - Put machine-specific shell settings in ~/.zshrc.local.
 - Add SSH keys to ~/.ssh.
 - Log in to gh (gh auth login) and 1Password.
+- Turn on Move in System Settings, Device Control and Data Access.
 EOF
