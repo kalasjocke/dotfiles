@@ -1,0 +1,9 @@
+# Each binding maps a shortcut to a frame for the focused window.
+# Frames are fractions of the screen's usable area, measured from the top left.
+# w and h are required, x and y default to 0, and center: true centers the
+# window both ways.
+bindings:
+  cmd+shift+1:      { w: 1/2, h: 1 }
+  cmd+shift+2:      { x: 1/2, w: 1/2, h: 1 }
+  cmd+return:       { w: 1, h: 1 }
+  cmd+shift+return: { w: 3/4, h: 1, center: true }
