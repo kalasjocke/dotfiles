@@ -1,27 +1,40 @@
 #!/bin/sh
-# Marks the tmux window a Claude Code session runs in as blocked or done, so
-# tmux.conf can color its index in the status bar.
+# Sets the window option @state of the tmux window a Claude Code session runs
+# in, using the state names of the OSC 7501 program status protocol.
 #
-# Wired to the Notification and Stop hooks in ~/.claude/settings.json. The state
-# goes in the window option @claude, using the state names of the OSC 7501
-# program status protocol:
+# Wired to these hooks in ~/.claude/settings.json:
 #
-# - blocked: Claude waits on a permission prompt or a question (Notification).
+# - working: you sent a prompt (UserPromptSubmit), or a tool finished
+#   (PostToolUse), which ends blocked once you answer a prompt.
+# - blocked: Claude waits on a permission prompt or a question
+#   (PermissionRequest, Notification).
 # - done: a turn finished and its result is not yet seen (Stop).
+# - error: a turn ended on an API error (StopFailure).
+# - unset: the session ended (SessionEnd).
 #
-# tmux.conf unsets @claude when the window is selected. tmux does not read OSC
-# 7501 itself yet, which is why this sets the option directly.
+# Claude Code runs no hook when you interrupt a turn, so working stays until
+# the next prompt or the end of the session.
+#
+# blocked, done and error mean "come and look", so they are not set on the
+# window you are looking at, and tmux.conf unsets them when you select the
+# window. tmux does not read OSC 7501 itself yet, which is why this sets the
+# option directly.
 
 input=$(cat)
+field() { printf '%s' "$input" | jq -r "$1"; }
 
-case $(printf '%s' "$input" | jq -r .hook_event_name) in
+case $(field .hook_event_name) in
+  UserPromptSubmit | PostToolUse) state=working ;;
+  PermissionRequest) state=blocked ;;
   Stop) state=done ;;
+  StopFailure) state=error ;;
+  SessionEnd) state= ;;
   Notification)
     # Prompts, questions and dialogs, in this session or an agent it tracks,
     # wait on you. idle_prompt fires a minute after Stop and must not turn done
     # into blocked. agent_completed is covered by Stop, and the other types,
     # like auth_success and push_notification, need no action.
-    case $(printf '%s' "$input" | jq -r '.notification_type // ""') in
+    case $(field '.notification_type // ""') in
       permission_prompt | worker_permission_prompt | elicitation_dialog | \
         elicitation_url_dialog | agent_needs_input | "") state=blocked ;;
       *) exit 0 ;;
@@ -37,7 +50,7 @@ pane=$TMUX_PANE
 # after a status symbol like "✳ ". So look up the name from the hook's
 # session_id and find the pane whose title is or ends with that name.
 if [ -z "$pane" ]; then
-  sid=$(printf '%s' "$input" | jq -r .session_id)
+  sid=$(field .session_id)
   name=$(jq -r --arg s "$sid" 'select(.sessionId == $s) | .name' \
     "$HOME"/.claude/sessions/*.json 2>/dev/null | head -1)
   [ -n "$name" ] || exit 0
@@ -47,9 +60,18 @@ if [ -z "$pane" ]; then
 fi
 [ -n "$pane" ] || exit 0
 
-# Leave the window you are looking at alone, as tmux does with the bell flag.
-[ "$(tmux display -p -t "$pane" '#{&&:#{window_active},#{session_attached}}' \
-  2>/dev/null)" = 1 ] && exit 0
+# In the window you are looking at, unset the state instead of asking you to
+# come and look, as tmux does with the bell flag. This also ends working.
+case $state in
+  blocked | done | error)
+    [ "$(tmux display -p -t "$pane" '#{&&:#{window_active},#{session_attached}}' \
+      2>/dev/null)" = 1 ] && state=
+    ;;
+esac
 
-tmux set -w -t "$pane" @claude "$state" 2>/dev/null
+if [ -n "$state" ]; then
+  tmux set -w -t "$pane" @state "$state" 2>/dev/null
+else
+  tmux set -w -u -t "$pane" @state 2>/dev/null
+fi
 exit 0
