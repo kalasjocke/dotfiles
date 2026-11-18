@@ -294,7 +294,14 @@ vim.lsp.config("lua", {
 	},
 })
 
-vim.lsp.enable({ "efm", "oxfmt", "vtsls", "lua" })
+-- markdown notes: [[wiki-link]] navigation, backlinks, completion and rename
+vim.lsp.config("marksman", {
+	cmd = { "marksman", "server" },
+	filetypes = { "markdown" },
+	root_markers = { ".marksman.toml", ".git" },
+})
+
+vim.lsp.enable({ "efm", "oxfmt", "vtsls", "lua", "marksman" })
 
 -- treesitter
 local treesitter_parsers = {
@@ -437,7 +444,7 @@ require("gitsigns").setup({
 		vim.keymap.set("n", "<leader>gr", gs.reset_hunk, opts)
 		vim.keymap.set("n", "<leader>gu", gs.undo_stage_hunk, opts)
 		vim.keymap.set("n", "<leader>gp", gs.preview_hunk, opts)
-		vim.keymap.set("n", "<leader>gl", function()
+		vim.keymap.set("n", "<leader>gd", function()
 			gs.toggle_deleted(gs.toggle_linehl())
 		end, opts)
 		vim.keymap.set("n", "<leader>gS", gs.stage_buffer, opts)
@@ -455,7 +462,6 @@ require("gitsigns").setup({
 
 -- Git commands
 vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns blame<cr>")
-vim.keymap.set("n", "<leader>gd", "<cmd>Gdiffsplit<cr>")
 
 -- close the Gitsigns blame split with <esc> or q
 vim.api.nvim_create_autocmd("FileType", {
