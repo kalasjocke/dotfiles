@@ -77,10 +77,11 @@ function agr { rg -0 -l "$1" . | AGR_FROM="$1" AGR_TO="$2" xargs -0 perl -pi -e 
 # the pid of the claude process on the pane's tty. A pane showing a background
 # session runs a separate claude process, though, and only the pane title links
 # the two: Claude titles the pane with the background session's name, sometimes
-# after a status symbol like "✳ ". The folder is the cwd of the last transcript
-# entry, which follows the session into and out of worktrees.
+# after a status symbol like "✳ ". The folder is the worktree in the last
+# worktree-state entry of the transcript, which Claude writes when the session
+# enters or exits a worktree, or else the folder the session started in.
 function cdc {
-  local pane tty title dir pid sid cwd last
+  local pane tty title dir pid sid cwd wt
   local -a transcript
   while IFS=$'\t' read -r pane tty title dir; do
     pid=$(ps -t "$tty" -o pid=,args= |
@@ -94,8 +95,9 @@ function cdc {
       | .[0] // empty | "\(.sessionId)\t\(.cwd)"' ~/.claude/sessions/*.json(N) 2>/dev/null)
     transcript=(~/.claude/projects/*/$sid.jsonl(N))
     if [[ -n $sid && -n $transcript ]]; then
-      last=$(tail -r $transcript[1] | jq -nRr 'first(inputs | fromjson? | objects | .cwd // empty)')
-      [[ -d $last ]] && cwd=$last
+      wt=$(grep '"type":"worktree-state"' $transcript[1] | tail -1 |
+        jq -r '.worktreeSession.worktreePath // empty')
+      [[ -d $wt ]] && cwd=$wt
     fi
     cd "${cwd:-$dir}" && return
   done < <(tmux list-panes -t "$TMUX_PANE" -F $'#{pane_id}\t#{pane_tty}\t#{pane_title}\t#{pane_current_path}')
