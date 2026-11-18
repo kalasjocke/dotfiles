@@ -301,6 +301,32 @@ vim.lsp.config("marksman", {
 	root_markers = { ".marksman.toml", ".git" },
 })
 
+-- ctrl-click a link in markdown: a [[wiki-link]] opens the note, anything else
+-- opens through gx. Neovim reads the link from the buffer, so it works when a
+-- long URL wraps, which terminal link detection inside tmux doesn't.
+local function open_link_under_cursor()
+	local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+	local line = vim.api.nvim_get_current_line()
+	for s, e in line:gmatch("()%[%[.-%]%]()") do
+		if col >= s and col < e then
+			vim.lsp.buf.definition()
+			return
+		end
+	end
+	vim.cmd("normal gx")
+end
+
+vim.api.nvim_create_autocmd("FileType", {
+	group = au,
+	pattern = "markdown",
+	callback = function(args)
+		vim.keymap.set("n", "<C-LeftMouse>", function()
+			vim.cmd('execute "normal! \\<LeftMouse>"')
+			open_link_under_cursor()
+		end, { buffer = args.buf })
+	end,
+})
+
 vim.lsp.enable({ "efm", "oxfmt", "vtsls", "lua", "marksman" })
 
 -- treesitter
