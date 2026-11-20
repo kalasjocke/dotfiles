@@ -56,10 +56,37 @@ vim.keymap.set("n", "<leader>f", require("fzf-lua").live_grep)
 vim.keymap.set("n", "<leader>s", require("fzf-lua").lsp_live_workspace_symbols)
 vim.keymap.set("n", "<space>", "za")
 vim.keymap.set("n", "-", "<Plug>(nvim-dir-up)")
-vim.keymap.set("x", "<C-h>", "<Cmd>TmuxNavigateLeft<CR>")
-vim.keymap.set("x", "<C-j>", "<Cmd>TmuxNavigateDown<CR>")
-vim.keymap.set("x", "<C-k>", "<Cmd>TmuxNavigateUp<CR>")
-vim.keymap.set("x", "<C-l>", "<Cmd>TmuxNavigateRight<CR>")
+if vim.env.TMUX ~= nil then
+	vim.keymap.set("x", "<C-h>", "<Cmd>TmuxNavigateLeft<CR>")
+	vim.keymap.set("x", "<C-j>", "<Cmd>TmuxNavigateDown<CR>")
+	vim.keymap.set("x", "<C-k>", "<Cmd>TmuxNavigateUp<CR>")
+	vim.keymap.set("x", "<C-l>", "<Cmd>TmuxNavigateRight<CR>")
+end
+if vim.env.REX_SESSION ~= nil then
+	-- Move between nvim windows. In Rex, at the edge, ask Rex to focus the
+	-- neighboring pane. Rex passes ctrl+hjkl to nvim, see ~/.config/rex/init.lua.
+	vim.g.tmux_navigator_no_mappings = 1
+	local function navigate(wincmd, direction)
+		return function()
+			local win = vim.api.nvim_get_current_win()
+			vim.cmd.wincmd(wincmd)
+			if vim.api.nvim_get_current_win() == win and vim.env.REX_SESSION ~= nil then
+				vim.system({
+					"rex",
+					"api",
+					"call",
+					"-s",
+					vim.env.REX_SESSION,
+					"session.focus_direction",
+					vim.json.encode({ direction = direction }),
+				})
+			end
+		end
+	end
+	for key, dir in pairs({ h = "left", j = "down", k = "up", l = "right" }) do
+		vim.keymap.set({ "n", "x" }, "<C-" .. key .. ">", navigate(key, dir))
+	end
+end
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
 local au = vim.api.nvim_create_augroup("MyAutocmds", { clear = true })
