@@ -381,6 +381,8 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 vim.lsp.enable({ "efm", "oxfmt", "vtsls", "lua", "marksman" })
+-- Don't paint color values such as "#e6edf3" in their own color.
+vim.lsp.document_color.enable(false)
 
 -- treesitter
 local treesitter_parsers = {
