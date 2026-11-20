@@ -65,7 +65,8 @@ setopt hist_find_no_dups
 setopt hist_ignore_all_dups
 
 # fzf zsh integration
-export FZF_DEFAULT_OPTS="--no-separator"
+export FZF_DEFAULT_OPTS="--no-separator --color=base16"
+[ -n "$REX_SESSION" ] && FZF_DEFAULT_OPTS+=" --color=gutter:#373737,bg+:#373737"
 export FZF_CTRL_R_OPTS='--height 12'
 source <(fzf --zsh)
 
