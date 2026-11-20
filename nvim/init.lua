@@ -3,6 +3,7 @@ vim.pack.add({
 	"https://github.com/creativenull/efmls-configs-nvim",
 	"https://github.com/mason-org/mason.nvim",
 	"https://github.com/christoomey/vim-tmux-navigator",
+	"https://github.com/projekt0n/github-nvim-theme",
 	"https://github.com/tpope/vim-fugitive",
 	"https://github.com/tpope/vim-rhubarb",
 	"https://github.com/tpope/vim-eunuch",
@@ -34,7 +35,32 @@ vim.opt.foldlevel = 10
 vim.opt.signcolumn = "yes"
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
-vim.cmd.colorscheme("rose-pine")
+if vim.env.REX_SESSION ~= nil then
+	-- Rex's Merino Dark theme uses GitHub's colors.
+	require("github-theme").setup({
+		-- Bolds Type and @type.builtin only. A group override replaces the whole
+		-- group, so the overrides below repeat the theme's colors.
+		options = { styles = { types = "bold" } },
+		groups = {
+			all = {
+				["@type"] = { fg = "syntax.type", style = "bold" },
+				["@lsp.type.class"] = { fg = "syntax.func", style = "bold" },
+				StatusLine = { fg = "#e6edf3", bg = "#161b22" },
+				StatusLineNC = { fg = "#7d8590", bg = "#161b22" },
+				IblIndent = { fg = "#21262d" },
+				-- Floats and menus on GitHub's overlay color, border included.
+				NormalFloat = { fg = "#e6edf3", bg = "#161b22" },
+				FloatBorder = { fg = "#30363d", bg = "#161b22" },
+				Pmenu = { fg = "#e6edf3", bg = "#161b22" },
+			},
+		},
+	})
+	vim.cmd.colorscheme("github_dark_default")
+	-- Pad floats in their own color instead of drawing a border line.
+	vim.opt.winborder = "solid"
+else
+	vim.cmd.colorscheme("rose-pine")
+end
 
 -- fzf
 require("fzf-lua").setup({
