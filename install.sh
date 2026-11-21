@@ -60,6 +60,7 @@ done
 
 link "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 link "$DOTFILES/claude/notify.sh" "$HOME/.claude/notify.sh"
+link "$DOTFILES/claude/tab-name.sh" "$HOME/.claude/tab-name.sh"
 for dir in "$DOTFILES"/claude/skills/*/; do
   name="$(basename "$dir")"
   link "$DOTFILES/claude/skills/$name" "$HOME/.claude/skills/$name"
