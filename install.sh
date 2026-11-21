@@ -72,6 +72,15 @@ if [ ! -e "$HOME/.claude/settings.json" ]; then
   echo "Copied $HOME/.claude/settings.json"
 fi
 
+# Teach Claude Code and other agents to use Rex, and have them name the Rex
+# session after their task. This adds a hook to the settings copied above.
+# Rex puts rex on PATH only in its own terminals.
+if command -v rex >/dev/null; then
+  rex skill setup --session-naming
+else
+  echo "Run install.sh again from a Rex terminal to set up Rex's agent skill"
+fi
+
 # Move moves windows with hotkeys. Build it only when it's missing; run make
 # install in ~/src/move to update it.
 if [ "${SKIP_BREW:-}" != 1 ] && [ ! -d "$HOME/Applications/Move.app" ]; then
