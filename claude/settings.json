@@ -35,6 +35,10 @@
           {
             "type": "command",
             "command": "$HOME/.claude/notify.sh"
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/tab-name.sh"
           }
         ]
       }
@@ -46,6 +50,10 @@
           {
             "type": "command",
             "command": "$HOME/.claude/notify.sh"
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/tab-name.sh"
           }
         ]
       }
@@ -58,6 +66,10 @@
             "type": "command",
             "command": "$HOME/.claude/notify.sh",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/tab-name.sh"
           }
         ]
       }
@@ -92,6 +104,20 @@
           {
             "type": "command",
             "command": "$HOME/.claude/notify.sh"
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/tab-name.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/tab-name.sh"
           }
         ]
       }
