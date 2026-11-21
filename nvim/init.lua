@@ -139,6 +139,16 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 	end,
 })
 
+-- keep the words added with zg in the dotfiles
+vim.opt.spellfile = vim.fn.stdpath("config") .. "/spell/en.utf-8.add"
+
+-- compile the word list when the compiled .spl file is missing or older, like
+-- after a fresh clone or a pull that changed the list
+local spellfile = vim.o.spellfile
+if vim.fn.filereadable(spellfile) == 1 and vim.fn.getftime(spellfile .. ".spl") < vim.fn.getftime(spellfile) then
+	vim.cmd("silent mkspell! " .. vim.fn.fnameescape(spellfile))
+end
+
 -- set spell in markdown and git commit messages
 vim.api.nvim_create_autocmd("FileType", {
 	group = au,
