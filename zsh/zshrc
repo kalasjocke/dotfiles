@@ -132,3 +132,5 @@ export PATH="$HOME/.local/bin:$PATH"
 # Source machine-specific secrets
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
+# Rex
+[ -n "$REX_BIN_DIR" ] && export PATH="$REX_BIN_DIR:$PATH"
