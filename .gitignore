@@ -5,3 +5,6 @@ zshrc.local
 
 # Written by brew bundle
 Brewfile.lock.json
+
+# Compiled by nvim from the .add word list
+nvim/spell/*.spl
