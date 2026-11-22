@@ -73,33 +73,78 @@ source <(fzf --zsh)
 # Find and replace across files: agr <from> <to>
 function agr { rg -0 -l "$1" . | AGR_FROM="$1" AGR_TO="$2" xargs -0 perl -pi -e 's/$ENV{AGR_FROM}/$ENV{AGR_TO}/g'; }
 
-# cd to the folder, worktree or not, of the Claude Code session in this tmux
-# window. Claude records each session in ~/.claude/sessions/<pid>.json, keyed by
-# the pid of the claude process on the pane's tty. A pane showing a background
-# session runs a separate claude process, though, and only the pane title links
-# the two: Claude titles the pane with the background session's name, sometimes
-# after a status symbol like "✳ ". The folder is the worktree in the last
-# worktree-state entry of the transcript, which Claude writes when the session
-# enters or exits a worktree, or else the folder the session started in.
-function cdc {
-  local pane tty title dir pid sid cwd wt
+# cd to the folder, worktree or not, of the Claude Code session in this Rex tab
+# or tmux window. Claude records each session in ~/.claude/sessions/<pid>.json,
+# keyed by the pid of the claude process in the pane. A pane showing a
+# background session runs a separate claude process, though, and only the pane
+# title links the two: Claude titles the pane with the background session's
+# name, sometimes after a status symbol like "✳ ", and tab-name.sh adds the
+# context size after it in Rex, like "dotfiles (76k)". The folder is the one
+# the session started in, unless the transcript's last entry is in another
+# worktree of the same repo. That covers worktrees from Claude's own worktree
+# tool and ones a session made with git and cd'd into. A cd into a subfolder or
+# another repo doesn't count.
+function cdw {
+  if [[ -n $REX_BLOCK ]]; then
+    _cdw_rex
+  elif [[ -n $TMUX_PANE ]]; then
+    _cdw_tmux
+  else
+    echo "cdw works only in Rex or tmux" >&2
+    return 1
+  fi
+}
+
+# Print the folder of the Claude Code session with this pid or pane title.
+function _cdw_dir {
+  local pid=$1 title=$2 sid cwd last root
   local -a transcript
+  IFS=$'\t' read -r sid cwd < <(jq -rs --arg t "$title" --argjson p "$pid" '
+    (map(select(.kind == "bg" and ((.name // "") as $n
+      | $n != "" and ($t == $n or ($t | endswith(" " + $n))
+        or ($t | startswith($n + " ("))))))
+      | sort_by(-(.updatedAt // 0)))
+    + map(select(.pid == $p))
+    | .[0] // empty | "\(.sessionId)\t\(.cwd)"' ~/.claude/sessions/*.json(N) 2>/dev/null)
+  transcript=(~/.claude/projects/*/$sid.jsonl(N))
+  if [[ -n $sid && -n $transcript && -d $cwd ]]; then
+    last=$(tail -n 200 $transcript[1] | grep -o '"cwd":"[^"]*"' | tail -1 | cut -d'"' -f4)
+    root=$(git -C "$last" rev-parse --show-toplevel 2>/dev/null)
+    if [[ -n $root && $root != $(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null) &&
+      $(git -C "$last" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) == \
+      $(git -C "$cwd" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) ]]; then
+      cwd=$root
+    fi
+  fi
+  print -r -- "$cwd"
+}
+
+# Rex reports each pane's foreground program with its pid and folder.
+function _cdw_rex {
+  local window block label pid dir cwd
+  window=$(rex block ls -s "$REX_SESSION" --json |
+    jq -r --arg b "$REX_BLOCK" '.blocks[] | select(.block_id == $b) | .window_id')
+  while IFS=$'\t' read -r block label; do
+    IFS=$'\t' read -r pid dir < <(rex block call -s "$REX_SESSION" -b "$block" process |
+      jq -r '.foreground | select(.argv0 == "claude" or ((.invoked_path // "") | endswith("/claude")))
+        | "\(.pid)\t\(.cwd)"')
+    [[ -n $pid ]] || continue
+    cwd=$(_cdw_dir "$pid" "$label")
+    cd "${cwd:-$dir}" && return
+  done < <(rex block ls -s "$REX_SESSION" --json |
+    jq -r --arg w "$window" '.blocks[] | select(.window_id == $w) | "\(.block_id)\t\(.label // "")"')
+  echo "No Claude Code session in this Rex tab" >&2
+  return 1
+}
+
+# tmux gives each pane's tty, and ps finds the claude process on it.
+function _cdw_tmux {
+  local pane tty title dir pid cwd
   while IFS=$'\t' read -r pane tty title dir; do
     pid=$(ps -t "$tty" -o pid=,args= |
       awk '{ a = $0; sub(/^ *[0-9]+ /, "", a) } a ~ /(^|\/)claude( |$)/ { print $1; exit }')
     [[ -n $pid ]] || continue
-    IFS=$'\t' read -r sid cwd < <(jq -rs --arg t "$title" --argjson p "$pid" '
-      (map(select(.kind == "bg" and ((.name // "") as $n
-        | $n != "" and ($t == $n or ($t | endswith(" " + $n))))))
-        | sort_by(-(.updatedAt // 0)))
-      + map(select(.pid == $p))
-      | .[0] // empty | "\(.sessionId)\t\(.cwd)"' ~/.claude/sessions/*.json(N) 2>/dev/null)
-    transcript=(~/.claude/projects/*/$sid.jsonl(N))
-    if [[ -n $sid && -n $transcript ]]; then
-      wt=$(grep '"type":"worktree-state"' $transcript[1] | tail -1 |
-        jq -r '.worktreeSession.worktreePath // empty')
-      [[ -d $wt ]] && cwd=$wt
-    fi
+    cwd=$(_cdw_dir "$pid" "$title")
     cd "${cwd:-$dir}" && return
   done < <(tmux list-panes -t "$TMUX_PANE" -F $'#{pane_id}\t#{pane_tty}\t#{pane_title}\t#{pane_current_path}')
   echo "No Claude Code session in this tmux window" >&2
