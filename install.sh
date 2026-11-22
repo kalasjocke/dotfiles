@@ -81,13 +81,24 @@ else
   echo "Run install.sh again from a Rex terminal to set up Rex's agent skill"
 fi
 
-# Move moves windows with hotkeys. Build it only when it's missing; run make
-# install in ~/src/move to update it.
-if [ "${SKIP_BREW:-}" != 1 ] && [ ! -d "$HOME/Applications/Move.app" ]; then
-  if [ ! -d "$HOME/src/move" ]; then
-    git clone https://github.com/kalasjocke/move.git "$HOME/src/move"
+# Build one of my apps from ~/src/<repo> with make, cloning it first if it's
+# missing. Skip it when ~/Applications already has it; run make install in its
+# folder to update it.
+install_app() {
+  local repo="$1" app="$2"
+  shift 2
+  [ -d "$HOME/Applications/$app.app" ] && return
+  if [ ! -d "$HOME/src/$repo" ]; then
+    git clone "https://github.com/kalasjocke/$repo.git" "$HOME/src/$repo"
   fi
-  make -C "$HOME/src/move" cert install
+  make -C "$HOME/src/$repo" "$@"
+}
+
+# Move moves windows with hotkeys, and Glucose shows the latest Dexcom reading
+# in the menu bar. Glucose builds with Xcode, which the Brewfile installs.
+if [ "${SKIP_BREW:-}" != 1 ]; then
+  install_app move Move cert install
+  install_app glucose Glucose cert install
 fi
 
 cat <<EOF
@@ -98,4 +109,5 @@ Done. Not handled by this script:
 - Add SSH keys to ~/.ssh.
 - Log in to gh (gh auth login) and 1Password.
 - Turn on Move in System Settings, Device Control and Data Access.
+- Log in to Dexcom Share in Glucose's Settings, from its menu bar item.
 EOF
