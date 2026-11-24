@@ -8,7 +8,13 @@
 --   ]f [f   next or previous file of the commit, wrapping around
 --   ]h [h   next or previous hunk in the diff
 --   K       the full commit message
+--   O       the commit on GitHub, at the file when on one
+--   P       the commit's pull request on GitHub
 --   q       close the tab
+--
+-- And in the list only:
+--
+--   y       copy the commit's short hash, or hash:path on a file
 --
 -- The diff shows the file as of the commit, as ,gd shows a buffer's changes
 -- with gitsigns: added and changed lines highlighted, removed lines shown above
@@ -536,11 +542,78 @@ local function step_hunk(state, direction)
 	end
 end
 
+-- The commit and file under the cursor in the list, or the ones in the diff.
+local function target(state)
+	local at = list_row(state) or state.current
+	local commit = state.commits[at.commit]
+	return commit, commit.files[at.file]
+end
+
 local function show_message(state)
-	local row = list_row(state)
-	local commit = state.commits[row and row.commit or state.current.commit]
+	local commit = target(state)
 	local message = git(state.root, { "show", "-s", "--format=%h %an, %ad%n%n%B", commit.hash }) or ""
 	vim.lsp.util.open_floating_preview(vim.split(vim.trim(message), "\n"), "gitcommit", { focus_id = "commits" })
+end
+
+-- The commit's page on the web host of the origin remote. On a file, or in the
+-- diff, the link goes to that file's diff, which GitHub names after the SHA-256
+-- of its path.
+local function open_remote(state)
+	local commit, file = target(state)
+	local remote = vim.trim(git(state.root, { "remote", "get-url", "origin" }) or "")
+	local host, path = remote:match("^%w+://[^/]-@?([^@/]+)/(.+)$")
+	if not host then
+		host, path = remote:match("^[^@]+@([^:]+):(.+)$")
+	end
+	if not host then
+		return vim.notify("No web URL for the origin remote " .. remote, vim.log.levels.WARN)
+	end
+	local url = "https://" .. host .. "/" .. path:gsub("%.git$", "") .. "/commit/" .. commit.hash
+	vim.ui.open(file and url .. "#diff-" .. vim.fn.sha256(file.path) or url)
+end
+
+-- The pull request the commit is part of, or was squash merged in. GitHub
+-- only knows commits that were pushed.
+local function open_pull_request(state)
+	local commit = target(state)
+	local api = "repos/{owner}/{repo}/commits/" .. commit.hash .. "/pulls"
+	local cmd = { "gh", "api", api, "--jq", ".[0].html_url // empty" }
+	vim.system(
+		cmd,
+		{ cwd = state.root, text = true },
+		vim.schedule_wrap(function(result)
+			local url = vim.trim(result.stdout or "")
+			if result.stderr:match("No commit found") then
+				vim.notify("GitHub doesn't have " .. commit.short .. ", push it first", vim.log.levels.WARN)
+			elseif result.code ~= 0 then
+				vim.notify(vim.trim(result.stderr), vim.log.levels.WARN)
+			elseif url == "" then
+				vim.notify("No pull request has " .. commit.short, vim.log.levels.WARN)
+			else
+				vim.ui.open(url)
+			end
+		end)
+	)
+end
+
+-- Show a message for two seconds. Neovim keeps a message on screen until
+-- something replaces it, so clear it then, unless a later message is showing.
+local function flash(message)
+	vim.api.nvim_echo({ { message } }, true, {})
+	vim.defer_fn(function()
+		local history = vim.split(vim.fn.execute("messages"), "\n")
+		if history[#history] == message and vim.fn.mode() == "n" then
+			vim.cmd.echo('""')
+		end
+	end, 2000)
+end
+
+local function copy_hash(state)
+	local commit, file = target(state)
+	local text = file and commit.short .. ":" .. file.path or commit.short
+	vim.fn.setreg("+", text)
+	vim.fn.setreg('"', text)
+	flash("Copied " .. text)
 end
 
 local function toggle(state)
@@ -574,6 +647,8 @@ keys = {
 		step_hunk(state, -1)
 	end,
 	K = show_message,
+	O = open_remote,
+	P = open_pull_request,
 	q = function()
 		vim.cmd.tabclose()
 	end,
@@ -647,6 +722,9 @@ function M.open(args, opts)
 			toggle(state)
 		end, { buffer = state.list_buf })
 	end
+	vim.keymap.set("n", "y", function()
+		copy_hash(state)
+	end, { buffer = state.list_buf, nowait = true })
 	-- Closing the list or the diff some other way than q, like :q, closes the
 	-- tab too.
 	for _, win in ipairs({ state.list_win, state.diff_win }) do
