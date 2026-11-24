@@ -554,6 +554,9 @@ require("gitsigns").setup({
 
 -- Git commands
 vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns blame<cr>")
+-- ,gD: the buffer's changes side by side, as GitHub shows them. Again closes
+-- them. See lua/diffsplit.lua.
+vim.keymap.set("n", "<leader>gD", require("diffsplit").toggle)
 
 -- commits: go through commits with a diff of each changed file, see
 -- lua/commits.lua. ,gl: the last 100 commits. ,gh: the commits that changed
