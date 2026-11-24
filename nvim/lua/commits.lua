@@ -20,6 +20,9 @@
 -- with gitsigns: added and changed lines highlighted, removed lines shown above
 -- them, and unchanged lines folded. Closing the list with :q closes the tab.
 --
+-- The list reloads when a ref of the repo changes, like after a commit, a
+-- rebase or a fetch.
+--
 -- The file is the real one, checked out in a worktree of the repo at
 -- <git dir>/commits-view, so language servers work in it as in any file. The
 -- worktree shares the repo's objects, so it needs no fetch, and its
@@ -662,6 +665,128 @@ function map(state, buf)
 	end
 end
 
+local function log_args(state)
+	local log = { "log", format }
+	if not state.path then
+		vim.list_extend(log, { "--no-merges", "--no-renames", "--raw", "--numstat" })
+	end
+	return vim.list_extend(log, state.args)
+end
+
+local function commits_of(state, out)
+	local commits = parse(out)
+	if state.path then
+		for _, commit in ipairs(commits) do
+			commit.files = { { path = state.path, status = "M" } }
+		end
+	end
+	return commits
+end
+
+-- What the list shows of each commit that can change without its hash: the
+-- refs.
+local function signature(commits)
+	local parts = {}
+	for _, commit in ipairs(commits) do
+		table.insert(parts, commit.hash .. commit.refs)
+	end
+	return table.concat(parts, "\n")
+end
+
+-- Run the log again and redraw the list if it changed. Expanded commits stay
+-- expanded and the cursor stays on its commit. When the commit in the diff is
+-- gone, like after an amend or a rebase, the diff moves to the commit with its
+-- subject, or else to the one at its place in the list.
+local function reload(state)
+	local cmd = vim.list_extend({ "git", "-C", state.root }, log_args(state))
+	vim.system(
+		cmd,
+		{ text = true },
+		vim.schedule_wrap(function(result)
+			if state.closed or result.code ~= 0 then
+				return
+			end
+			local commits = commits_of(state, result.stdout)
+			if #commits == 0 or signature(commits) == signature(state.commits) then
+				return
+			end
+			-- Find each commit in the new list: the same commit, or the first one
+			-- with its subject when a rebase rewrote it.
+			local by_hash, by_subject = {}, {}
+			for ci, commit in ipairs(commits) do
+				by_hash[commit.hash] = ci
+				by_subject[commit.subject] = by_subject[commit.subject] or ci
+			end
+			local function find(ci)
+				local commit = state.commits[ci]
+				return by_hash[commit.hash] or by_subject[commit.subject]
+			end
+			local expanded = {}
+			for ci, open in pairs(state.expanded) do
+				if open and find(ci) then
+					expanded[find(ci)] = true
+				end
+			end
+			local cursor = state.rows[vim.api.nvim_win_get_cursor(state.list_win)[1]]
+			local cursor_commit = find(cursor.commit)
+			local current = state.commits[state.current.commit]
+			local file = current.files[state.current.file]
+			local ci = find(state.current.commit) or math.min(state.current.commit, #commits)
+			state.commits, state.expanded = commits, expanded
+			if by_hash[current.hash] then
+				state.current.commit = ci
+				render(state)
+			else
+				local fi = 1
+				for i, f in ipairs(commits[ci].files) do
+					if file and f.path == file.path then
+						fi = i
+					end
+				end
+				show(state, ci, fi)
+			end
+			for row, r in ipairs(state.rows) do
+				if r.commit == cursor_commit and r.file == cursor.file then
+					vim.api.nvim_win_set_cursor(state.list_win, { row, 0 })
+				end
+			end
+		end)
+	)
+end
+
+-- Reload the list when git writes a ref: HEAD of the repo's worktree, a branch,
+-- a tag or a remote branch. Refs live in the common git dir, and HEAD in the
+-- worktree's own git dir under it. One git command writes several files, so
+-- wait for them to settle.
+local function watch(state)
+	local common = git(state.root, { "rev-parse", "--path-format=absolute", "--git-common-dir" })
+	local own = git(state.root, { "rev-parse", "--absolute-git-dir" })
+	if not common or not own then
+		return
+	end
+	common = vim.trim(common)
+	local head = vim.fs.relpath(common, vim.trim(own) .. "/HEAD")
+	local watcher, timer = vim.uv.new_fs_event(), vim.uv.new_timer()
+	-- recursive works on macOS and Windows. Elsewhere this only sees HEAD and
+	-- packed-refs.
+	watcher:start(common, { recursive = true }, function(err, name)
+		if err or not name or name:match("%.lock$") then
+			return
+		end
+		if name == head or name == "packed-refs" or name:match("^refs") then
+			timer:start(300, 0, function()
+				vim.schedule(function()
+					reload(state)
+				end)
+			end)
+		end
+	end)
+	state.unwatch = function()
+		watcher:close()
+		timer:close()
+	end
+end
+
 -- Open the commits that `git log <args>` lists. opts.root is the repo, and
 -- opts.path, when set, is the only file each commit shows, for `git log -L`.
 function M.open(args, opts)
@@ -670,25 +795,16 @@ function M.open(args, opts)
 	if not root then
 		return vim.notify("Not in a git repo", vim.log.levels.WARN)
 	end
-	local log = { "log", format }
-	if not opts.path then
-		vim.list_extend(log, { "--no-merges", "--no-renames", "--raw", "--numstat" })
-	end
-	local out, err = git(root, vim.list_extend(log, args))
+	local state = { root = root, args = args, path = opts.path, expanded = {}, counts = not opts.path }
+	local out, err = git(root, log_args(state))
 	if not out then
 		return vim.notify(err, vim.log.levels.ERROR)
 	end
-	local commits = parse(out)
-	if #commits == 0 then
+	state.commits = commits_of(state, out)
+	if #state.commits == 0 then
 		return vim.notify("No commits", vim.log.levels.WARN)
 	end
-	if opts.path then
-		for _, commit in ipairs(commits) do
-			commit.files = { { path = opts.path, status = "M" } }
-		end
-	end
 
-	local state = { root = root, commits = commits, expanded = {}, counts = not opts.path }
 	state.view = view_for(root)
 	if state.view then
 		state.checked_out = vim.trim(git(state.view, { "rev-parse", "HEAD" }) or "")
@@ -732,6 +848,11 @@ function M.open(args, opts)
 			pattern = tostring(win),
 			once = true,
 			callback = function()
+				state.closed = true
+				if state.unwatch then
+					state.unwatch()
+					state.unwatch = nil
+				end
 				vim.schedule(function()
 					if vim.api.nvim_tabpage_is_valid(tab) and #vim.api.nvim_list_tabpages() > 1 then
 						vim.cmd.tabclose(vim.api.nvim_tabpage_get_number(tab))
@@ -742,6 +863,7 @@ function M.open(args, opts)
 		})
 	end
 	show(state, 1, 1)
+	watch(state)
 end
 
 -- The last 100 commits.
