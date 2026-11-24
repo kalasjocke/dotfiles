@@ -13,6 +13,12 @@
 -- The diff shows the file as of the commit, as ,gd shows a buffer's changes
 -- with gitsigns: added and changed lines highlighted, removed lines shown above
 -- them, and unchanged lines folded. Closing the list with :q closes the tab.
+--
+-- The file is the real one, checked out in a worktree of the repo at
+-- <git dir>/commits-view, so language servers work in it as in any file. The
+-- worktree shares the repo's objects, so it needs no fetch, and its
+-- node_modules folders link to the ones in the checkout. Its files are
+-- read-only. A file the commit deleted shows in a scratch buffer instead.
 
 local M = {}
 
@@ -191,6 +197,140 @@ local function lines_at(root, rev, path)
 	return lines
 end
 
+-- The node_modules folders of the checkout, up to three levels down.
+local function find_dependencies(root)
+	local found = {}
+	local function skip(dir)
+		local name = vim.fs.basename(dir)
+		return name ~= "node_modules" and not name:match("^%.")
+	end
+	for rel, type in vim.fs.dir(root, { depth = 3, skip = skip }) do
+		if type == "directory" and vim.fs.basename(rel) == "node_modules" then
+			table.insert(found, rel)
+		end
+	end
+	return found
+end
+
+-- Link the checkout's node_modules folders into the view, so imports resolve.
+-- They hold the checkout's installed packages, not the commit's. Run it after
+-- each checkout, which can add the folders they go in.
+local function link_dependencies(state)
+	for _, rel in ipairs(state.dependencies) do
+		local target, link = state.root .. "/" .. rel, state.view .. "/" .. rel
+		local stat = vim.uv.fs_lstat(link)
+		if stat and stat.type == "link" and vim.uv.fs_readlink(link) ~= target then
+			vim.uv.fs_unlink(link)
+			stat = nil
+		end
+		if not stat and vim.uv.fs_stat(vim.fs.dirname(link)) then
+			vim.uv.fs_symlink(target, link)
+		end
+	end
+end
+
+-- The view's files are read-only. When a checkout changes one that's open,
+-- reload it without asking. When it removes one, close it. Neovim would
+-- otherwise warn about the missing file and then wait a second.
+local view_files = "*/commits-view/*"
+vim.api.nvim_create_autocmd("BufReadPost", {
+	pattern = view_files,
+	callback = function(args)
+		vim.bo[args.buf].readonly = true
+		vim.bo[args.buf].modifiable = false
+	end,
+})
+vim.api.nvim_create_autocmd("FileChangedShell", {
+	pattern = view_files,
+	callback = function(args)
+		if vim.v.fcs_reason ~= "deleted" then
+			vim.v.fcs_choice = "reload"
+			return
+		end
+		vim.v.fcs_choice = ""
+		-- This autocmd may not delete buffers itself.
+		vim.schedule(function()
+			if vim.api.nvim_buf_is_valid(args.buf) and #vim.fn.win_findbuf(args.buf) == 0 then
+				pcall(vim.api.nvim_buf_delete, args.buf, {})
+			end
+		end)
+	end,
+})
+
+-- The view worktree of the repo, created the first time.
+local function view_for(root)
+	local common = git(root, { "rev-parse", "--path-format=absolute", "--git-common-dir" })
+	if not common then
+		return nil
+	end
+	local view = vim.trim(common) .. "/commits-view"
+	if not vim.uv.fs_stat(view .. "/.git") then
+		git(root, { "worktree", "prune" })
+		local _, err = git(root, { "worktree", "add", "--quiet", "--detach", view, "HEAD" })
+		if err then
+			vim.notify("Can't create " .. view .. ": " .. err, vim.log.levels.WARN)
+			return nil
+		end
+	end
+	return view
+end
+
+-- Check out a commit in the view and reload its files that are open.
+-- Tell the language servers working there which files changed, since the
+-- vtsls watcher in init.lua skips paths under .git.
+local function checkout(state, hash)
+	if state.checked_out == hash then
+		return true
+	end
+	local _, err = git(state.view, { "checkout", "--quiet", "--detach", "--force", hash })
+	if err then
+		vim.notify(err, vim.log.levels.WARN)
+		return false
+	end
+	local from = state.checked_out
+	state.checked_out = hash
+	link_dependencies(state)
+	vim.cmd("checktime")
+	local diff = from and git(state.view, { "diff", "--name-status", "--no-renames", from, hash })
+	if not diff then
+		return true
+	end
+	local changes = {}
+	for status, path in diff:gmatch("(%a)%d*\t([^\n]+)") do
+		local kind = ({ A = 1, D = 3 })[status] or 2
+		table.insert(changes, { uri = vim.uri_from_fname(state.view .. "/" .. path), type = kind })
+	end
+	for _, client in ipairs(vim.lsp.get_clients()) do
+		if client.root_dir and vim.startswith(client.root_dir, state.view) then
+			client:notify("workspace/didChangeWatchedFiles", { changes = changes })
+		end
+	end
+	return true
+end
+
+-- The keys of the list and the diff, besides <CR> and o in the list. Set
+-- further down, as they call functions defined there.
+local keys, map
+
+-- The browser state of each buffer the diff window shows.
+local showing = {}
+
+-- Take the diff off a buffer the diff window no longer shows, and close it
+-- when no other window shows it either.
+local function release(buf)
+	if not vim.api.nvim_buf_is_valid(buf) then
+		return
+	end
+	showing[buf] = nil
+	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
+	for lhs in pairs(keys) do
+		pcall(vim.keymap.del, "n", lhs, { buffer = buf })
+	end
+	if #vim.fn.win_findbuf(buf) == 0 then
+		pcall(vim.api.nvim_buf_delete, buf, {})
+	end
+end
+
 local function scratch()
 	local buf = vim.api.nvim_create_buf(false, true)
 	vim.bo[buf].bufhidden = "wipe"
@@ -198,18 +338,54 @@ local function scratch()
 	return buf
 end
 
--- Put a file's lines in the diff window's scratch buffer.
+-- Put the file in the diff window: the view's copy, or a scratch buffer with
+-- these lines when the view can't show it.
 local function open_file(state, hash, path, lines)
-	local buf = state.diff_buf
-	vim.bo[buf].modifiable = true
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-	vim.bo[buf].modifiable = false
-	pcall(vim.treesitter.stop, buf)
-	vim.bo[buf].filetype = path and vim.filetype.match({ filename = path, contents = lines }) or ""
+	local buf
+	if path and state.view and checkout(state, hash) and vim.uv.fs_stat(state.view .. "/" .. path) then
+		vim.api.nvim_win_call(state.diff_win, function()
+			vim.cmd("silent keepalt keepjumps edit " .. vim.fn.fnameescape(state.view .. "/" .. path))
+		end)
+		buf = vim.api.nvim_win_get_buf(state.diff_win)
+		vim.bo[buf].buflisted = false
+	else
+		buf = state.diff_buf
+		if vim.bo[buf].buftype ~= "nofile" then
+			buf = scratch()
+		end
+		vim.bo[buf].modifiable = true
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+		vim.bo[buf].modifiable = false
+		pcall(vim.treesitter.stop, buf)
+		vim.bo[buf].filetype = path and vim.filetype.match({ filename = path, contents = lines }) or ""
+		vim.api.nvim_win_set_buf(state.diff_win, buf)
+	end
+	if buf ~= state.diff_buf then
+		local previous = state.diff_buf
+		state.diff_buf = buf
+		release(previous)
+	end
 	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
+	showing[buf] = state
+	map(state, buf)
 	vim.wo[state.diff_win].winbar = path and ("%#Identifier#" .. hash:sub(1, 7) .. "%* " .. path) or ""
 	return buf
 end
+
+-- The view's files are real files in a repo, so gitsigns attaches to them a
+-- moment after they open, and its ]h and [h replace the browser's. They'd find
+-- no hunks, since the view has no uncommitted changes. Put the browser's keys
+-- back after each gitsigns update, which comes after its on_attach. Gitsigns
+-- stays attached and shows no signs, as the view has nothing to show.
+vim.api.nvim_create_autocmd("User", {
+	pattern = "GitSignsUpdate",
+	callback = function(args)
+		local buf = args.data and args.data.buffer
+		if buf and showing[buf] then
+			map(showing[buf], buf)
+		end
+	end,
+})
 
 -- Unchanged lines more than this far from a change are folded.
 local context = 6
@@ -261,7 +437,8 @@ local function show_diff(state, buf, old)
 		end
 	end
 
-	-- Set the folds for this buffer in this window only.
+	-- Set the folds for this buffer in this window only, so a file opened from
+	-- here with gd keeps its usual folding.
 	vim.api.nvim_win_call(state.diff_win, function()
 		vim.opt_local.foldmethod = "manual"
 		vim.opt_local.foldlevel = 0
@@ -310,7 +487,9 @@ local function show(state, ci, fi)
 	state.current = { commit = ci, file = fi }
 	local path = file and file.path
 	local old = path and lines_at(state.root, commit.parent, path) or {}
-	local lines = path and lines_at(state.root, commit.hash, path) or {}
+	-- Without a view, the scratch buffer needs the file's lines. With one, it
+	-- only shows files the commit deleted, which have none.
+	local lines = (not state.view and path) and lines_at(state.root, commit.hash, path) or {}
 	local buf = open_file(state, commit.hash, path, lines)
 	state.hunks = show_diff(state, buf, old)
 	vim.api.nvim_win_set_cursor(state.diff_win, { 1, 0 })
@@ -375,8 +554,7 @@ local function toggle(state)
 	render(state)
 end
 
--- The keys of the list and the diff, besides <CR> and o in the list.
-local keys = {
+keys = {
 	["]c"] = function(state)
 		step_commit(state, 1)
 	end,
@@ -401,7 +579,7 @@ local keys = {
 	end,
 }
 
-local function map(state, buf)
+function map(state, buf)
 	for lhs, fn in pairs(keys) do
 		vim.keymap.set("n", lhs, function()
 			fn(state)
@@ -436,6 +614,12 @@ function M.open(args, opts)
 	end
 
 	local state = { root = root, commits = commits, expanded = {}, counts = not opts.path }
+	state.view = view_for(root)
+	if state.view then
+		state.checked_out = vim.trim(git(state.view, { "rev-parse", "HEAD" }) or "")
+		state.dependencies = find_dependencies(root)
+		link_dependencies(state)
+	end
 	vim.cmd("tabnew")
 	local placeholder = vim.api.nvim_get_current_buf()
 	local tab = vim.api.nvim_get_current_tabpage()
@@ -457,7 +641,6 @@ function M.open(args, opts)
 	}) do
 		vim.wo[state.list_win][option] = value
 	end
-	map(state, state.diff_buf)
 	map(state, state.list_buf)
 	for _, lhs in ipairs({ "<CR>", "o" }) do
 		vim.keymap.set("n", lhs, function()
@@ -475,6 +658,7 @@ function M.open(args, opts)
 					if vim.api.nvim_tabpage_is_valid(tab) and #vim.api.nvim_list_tabpages() > 1 then
 						vim.cmd.tabclose(vim.api.nvim_tabpage_get_number(tab))
 					end
+					release(state.diff_buf)
 				end)
 			end,
 		})
