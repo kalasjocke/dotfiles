@@ -80,6 +80,7 @@ vim.keymap.set("x", "\\", "gc", { remap = true })
 vim.keymap.set("n", "<leader>t", require("fzf-lua").files)
 vim.keymap.set("n", "<leader>f", require("fzf-lua").live_grep)
 vim.keymap.set("n", "<leader>s", require("fzf-lua").lsp_live_workspace_symbols)
+vim.keymap.set("n", "<leader>gg", require("fzf-lua").git_status)
 vim.keymap.set("n", "<space>", "za")
 vim.keymap.set("n", "-", "<Plug>(nvim-dir-up)")
 if vim.env.TMUX ~= nil then
