@@ -562,8 +562,12 @@ vim.keymap.set("n", "<leader>gD", require("diffsplit").toggle)
 -- lua/commits.lua. ,gl: the last 100 commits. ,gh: the commits that changed
 -- the current file, or the selected lines. ,gm: the commits on this branch
 -- that origin's default branch doesn't have, oldest first. :Commits takes
--- git log arguments, like :Commits main..HEAD --author=Joakim.
+-- git log arguments, like :Commits main..HEAD --author=Joakim. diff picks the
+-- diff a browser starts with, "unified" or "split". In the browser, ,gd and
+-- ,gD switch to the unified and the split diff, as they show a buffer's
+-- changes.
 local commits = require("commits")
+commits.setup({ diff = "split" })
 vim.keymap.set("n", "<leader>gl", commits.log)
 vim.keymap.set("n", "<leader>gh", commits.file)
 vim.keymap.set("x", "<leader>gh", commits.lines)

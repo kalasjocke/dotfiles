@@ -10,15 +10,20 @@
 --   K       the full commit message
 --   O       the commit on GitHub, at the file when on one
 --   P       the commit's pull request on GitHub
+--   ,gd     the unified diff
+--   ,gD     the split diff
 --   q       close the tab
 --
 -- And in the list only:
 --
 --   y       copy the commit's short hash, or hash:path on a file
 --
--- The diff shows the file as of the commit, as ,gd shows a buffer's changes
--- with gitsigns: added and changed lines highlighted, removed lines shown above
--- them, and unchanged lines folded. Closing the list with :q closes the tab.
+-- The unified diff shows the file as of the commit, as ,gd shows a buffer's
+-- changes with gitsigns: added and changed lines highlighted, removed lines
+-- shown above them, and unchanged lines folded. The split diff shows it as ,gD
+-- does, with the file before the commit on the left, in Neovim's diff mode.
+-- setup({ diff = "split" }) makes the split the one a new browser starts with.
+-- Closing the list or a diff window with :q closes the tab.
 --
 -- The list reloads when a ref of the repo changes, like after a commit, a
 -- rebase or a fetch.
@@ -30,6 +35,15 @@
 -- read-only. A file the commit deleted shows in a scratch buffer instead.
 
 local M = {}
+
+M.config = {
+	-- The diff a browser starts with: "unified" or "split".
+	diff = "unified",
+}
+
+function M.setup(opts)
+	M.config = vim.tbl_extend("force", M.config, opts or {})
+end
 
 local ns = vim.api.nvim_create_namespace("commits")
 -- Color the counts and statuses with the text color of the diff groups. Some
@@ -401,7 +415,7 @@ local context = 6
 
 -- Draw the old lines diffed into the buffer, and fold the unchanged lines.
 -- Returns the line each hunk starts at, with the number of removed lines drawn
--- above it.
+-- above it. The split diff only needs the hunks, as diff mode draws the rest.
 local function show_diff(state, buf, old)
 	local new = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
 	if #new == 1 and new[1] == "" then
@@ -420,7 +434,9 @@ local function show_diff(state, buf, old)
 		local old_start, old_count, new_start, new_count = unpack(hunk)
 		local line_hl = old_count == 0 and "CommitsAddLine" or "CommitsChangeLine"
 		for line = new_start, new_start + new_count - 1 do
-			vim.api.nvim_buf_set_extmark(buf, ns, line - 1, 0, { line_hl_group = line_hl })
+			if not state.split then
+				vim.api.nvim_buf_set_extmark(buf, ns, line - 1, 0, { line_hl_group = line_hl })
+			end
 		end
 		-- Removed lines go above the new ones, or below the line before them
 		-- when nothing replaced them.
@@ -436,7 +452,7 @@ local function show_diff(state, buf, old)
 		-- removed lines go above that line.
 		local above = new_count > 0 or new_start == 0
 		local anchor = math.max(new_start, 1)
-		if #virt_lines > 0 then
+		if #virt_lines > 0 and not state.split then
 			vim.api.nvim_buf_set_extmark(buf, ns, anchor - 1, 0, { virt_lines = virt_lines, virt_lines_above = above })
 		end
 		table.insert(hunks, { line = anchor, above = above and old_count or 0 })
@@ -446,6 +462,9 @@ local function show_diff(state, buf, old)
 		end
 	end
 
+	if state.split then
+		return hunks
+	end
 	-- Set the folds for this buffer in this window only, so a file opened from
 	-- here with gd keeps its usual folding.
 	vim.api.nvim_win_call(state.diff_win, function()
@@ -465,6 +484,59 @@ local function show_diff(state, buf, old)
 	return hunks
 end
 
+-- Put the file before the commit in a window left of the diff window, and
+-- diff the two in Neovim's diff mode. The window stays for the next file.
+local function show_split(state, commit, path, old)
+	if not (state.old_win and vim.api.nvim_win_is_valid(state.old_win)) then
+		state.old_buf = scratch()
+		state.old_win = vim.api.nvim_open_win(state.old_buf, false, { split = "left", win = state.diff_win })
+		map(state, state.old_buf)
+		-- Closing it with :q closes the tab, as for the other two windows.
+		state.old_closed = vim.api.nvim_create_autocmd("WinClosed", {
+			pattern = tostring(state.old_win),
+			once = true,
+			callback = function()
+				vim.schedule(function()
+					pcall(vim.api.nvim_win_close, state.list_win, false)
+				end)
+			end,
+		})
+	end
+	local buf = state.old_buf
+	vim.bo[buf].modifiable = true
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, old)
+	vim.bo[buf].modifiable = false
+	pcall(vim.treesitter.stop, buf)
+	vim.bo[buf].filetype = path and vim.filetype.match({ filename = path, contents = old }) or ""
+	local parent = commit.parent and commit.parent:sub(1, 7)
+	vim.wo[state.old_win].winbar = (path and parent) and ("%#Identifier#" .. parent .. "%* " .. path) or ""
+	-- A window keeps its options for each buffer it shows, so style the diff
+	-- window again for the file it now shows.
+	require("diffsplit").style(state.old_win, state.diff_win)
+	for _, win in ipairs({ state.old_win, state.diff_win }) do
+		vim.api.nvim_win_call(win, function()
+			vim.cmd("diffthis")
+		end)
+	end
+	vim.cmd("diffupdate")
+end
+
+-- Go back to the unified diff: close the left window and turn diff mode off.
+local function close_split(state)
+	if state.old_win and vim.api.nvim_win_is_valid(state.old_win) then
+		vim.api.nvim_del_autocmd(state.old_closed)
+		vim.api.nvim_win_close(state.old_win, true)
+	end
+	state.old_win = nil
+	vim.api.nvim_win_call(state.diff_win, function()
+		vim.cmd("diffoff")
+	end)
+	for _, name in ipairs({ "winhighlight", "fillchars" }) do
+		local global = vim.api.nvim_get_option_value(name, { scope = "global" })
+		vim.api.nvim_set_option_value(name, global, { scope = "local", win = state.diff_win })
+	end
+end
+
 -- Move to the start of the next or previous hunk, with its removed lines in
 -- view.
 local function jump_hunk(state, direction, from)
@@ -477,14 +549,18 @@ local function jump_hunk(state, direction, from)
 			target = hunk
 		end
 	end
-	if not target then
-		return
-	end
 	vim.api.nvim_win_call(state.diff_win, function()
-		vim.api.nvim_win_set_cursor(0, { target.line, 0 })
-		vim.cmd("normal! zz")
-		if target.line == 1 then
-			vim.fn.winrestview({ topline = 1, topfill = target.above })
+		if target then
+			vim.api.nvim_win_set_cursor(0, { target.line, 0 })
+			vim.cmd("normal! zz")
+			if target.line == 1 then
+				vim.fn.winrestview({ topline = 1, topfill = target.above })
+			end
+		end
+		-- Diff mode lines the left side up when the right one scrolls, which
+		-- moving its cursor from here doesn't do. Scroll it down and back.
+		if state.split then
+			vim.cmd([[exe "normal! \<C-e>\<C-y>"]])
 		end
 	end)
 end
@@ -501,6 +577,9 @@ local function show(state, ci, fi)
 	local lines = (not state.view and path) and lines_at(state.root, commit.hash, path) or {}
 	local buf = open_file(state, commit.hash, path, lines)
 	state.hunks = show_diff(state, buf, old)
+	if state.split then
+		show_split(state, commit, path, old)
+	end
 	vim.api.nvim_win_set_cursor(state.diff_win, { 1, 0 })
 	jump_hunk(state, 1, 0)
 	vim.api.nvim_win_set_cursor(state.list_win, { render(state), 0 })
@@ -649,6 +728,19 @@ keys = {
 	["[h"] = function(state)
 		step_hunk(state, -1)
 	end,
+	["<leader>gd"] = function(state)
+		if state.split then
+			state.split = false
+			close_split(state)
+			show(state, state.current.commit, state.current.file)
+		end
+	end,
+	["<leader>gD"] = function(state)
+		if not state.split then
+			state.split = true
+			show(state, state.current.commit, state.current.file)
+		end
+	end,
 	K = show_message,
 	O = open_remote,
 	P = open_pull_request,
@@ -796,6 +888,7 @@ function M.open(args, opts)
 		return vim.notify("Not in a git repo", vim.log.levels.WARN)
 	end
 	local state = { root = root, args = args, path = opts.path, expanded = {}, counts = not opts.path }
+	state.split = M.config.diff == "split"
 	local out, err = git(root, log_args(state))
 	if not out then
 		return vim.notify(err, vim.log.levels.ERROR)
