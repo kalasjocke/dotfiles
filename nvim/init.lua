@@ -554,6 +554,20 @@ require("gitsigns").setup({
 -- Git commands
 vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns blame<cr>")
 
+-- commits: go through commits with a diff of each changed file, see
+-- lua/commits.lua. ,gl: the last 100 commits. ,gh: the commits that changed
+-- the current file, or the selected lines. ,gm: the commits on this branch
+-- that origin's default branch doesn't have, oldest first. :Commits takes
+-- git log arguments, like :Commits main..HEAD --author=Joakim.
+local commits = require("commits")
+vim.keymap.set("n", "<leader>gl", commits.log)
+vim.keymap.set("n", "<leader>gh", commits.file)
+vim.keymap.set("x", "<leader>gh", commits.lines)
+vim.keymap.set("n", "<leader>gm", commits.branch)
+vim.api.nvim_create_user_command("Commits", function(cmd)
+	commits.open(cmd.fargs)
+end, { nargs = "*" })
+
 -- close the Gitsigns blame split with <esc> or q
 vim.api.nvim_create_autocmd("FileType", {
 	group = au,
