@@ -179,6 +179,9 @@ for index = 1, 9 do
 	rex.bind("cmd+" .. index, "goto_session", { index = index })
 end
 
+-- cmd+s: open the session list, Rex's Change Session picker.
+rex.bind("cmd+s", "session.switch")
+
 -- tmux's default ctrl+a, then [: copy mode, with vi keys as in tmux.conf:94-98.
 rex.bind("ctrl+a>[", "pane.copy_mode.enter")
 
