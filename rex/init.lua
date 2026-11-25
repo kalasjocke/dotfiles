@@ -63,8 +63,54 @@ rex.action({
 		end
 	end,
 })
--- cmd+r: rename the session.
-rex.bind("cmd+r", "session.rename")
+-- cmd+r: rename the session. ctrl+a, then r: rename the tab.
+-- Rex's own rename actions each have their own editor, so these ask in the
+-- command palette instead, with the current name filled in. An empty name gives
+-- the tab back its generated name.
+local function view_or_error()
+	local view, err = rex.session.view({})
+	if not view then
+		error(err, 0)
+	end
+	return view
+end
+
+rex.action({
+	name = "rename_current_session",
+	title = "Rename Current Session",
+	run = function()
+		local view = view_or_error()
+		local name = rex.ui.input({ title = "Rename Session", value = view.label, confirm = "Rename" })
+		if name then
+			rex.session.set_label({ label = name })
+		end
+	end,
+})
+
+rex.action({
+	name = "rename_current_tab",
+	title = "Rename Current Tab",
+	run = function()
+		local view = view_or_error()
+		local current = ""
+		for _, window in ipairs(view.windows or {}) do
+			if window.window_id == view.active_window_id then
+				current = window.label or ""
+			end
+		end
+		-- An unnamed tab has a default label like "Window d6ccdec1".
+		if current:match("^Window %x+$") then
+			current = ""
+		end
+		local name = rex.ui.input({ title = "Rename Tab", value = current, confirm = "Rename" })
+		if name then
+			rex.session.set_window_label({ window_id = view.active_window_id, label = name })
+		end
+	end,
+})
+
+rex.bind("cmd+r", "rename_current_session")
+rex.bind("ctrl+a>r", "rename_current_tab")
 
 -- Importing adds a new custom theme each time, so run this once per Mac.
 rex.action({
