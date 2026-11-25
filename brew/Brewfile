@@ -54,6 +54,8 @@ brew "mkcert"
 brew "node"
 # Incremental parsing library
 brew "tree-sitter"
+# Parser generator tool
+brew "tree-sitter-cli"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim", args: ["HEAD"]
 # Port scanning utility for large networks
@@ -113,8 +115,6 @@ cask "slack-cli"
 cask "spotify"
 # Multimedia player
 cask "vlc"
-# Native desktop client for WhatsApp
-cask "whatsapp"
 # Voice-to-text dictation with AI-powered auto-editing
 cask "wispr-flow"
 mas "1Blocker", id: 1365531024
@@ -133,9 +133,7 @@ mas "Things", id: 904280696
 mas "WhatsApp", id: 310633997
 mas "Xcode", id: 497799835
 mas "Yubico Authenticator", id: 1497506650
-cargo "deploy-to", source: "ssh://git@github.com/lookback/lookback-deploy-to-rs?branch=main"
 cargo "lol", source: "ssh://git@ssh.github.com:443/lookback/lol-cli.git"
-cargo "tree-sitter-cli"
 npm "corepack"
 npm "typescript-language-server"
 npm "typescript"
