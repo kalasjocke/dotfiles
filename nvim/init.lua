@@ -35,6 +35,8 @@ vim.opt.foldlevel = 10
 vim.opt.signcolumn = "yes"
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
+-- Start with an empty buffer, without the intro screen
+vim.opt.shortmess:append("I")
 if vim.env.REX_SESSION ~= nil then
 	-- Rex's Merino Dark theme uses GitHub's colors.
 	require("github-theme").setup({
