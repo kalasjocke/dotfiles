@@ -534,6 +534,9 @@ require("gitsigns").setup({
 		local gs = package.loaded.gitsigns
 		local opts = { buffer = bufnr }
 
+		-- Blame
+		vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns blame<cr>")
+
 		-- Navigation
 		vim.keymap.set("n", "]h", function()
 			gs.nav_hunk("next")
@@ -559,9 +562,6 @@ require("gitsigns").setup({
 		end, opts)
 	end,
 })
-
--- Git commands
-vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns blame<cr>")
 
 -- commits
 local commits = require("commits")
