@@ -19,6 +19,10 @@ vim.pack.add({
 	"https://github.com/folke/trouble.nvim",
 })
 
+-- commits.vim loads from its checkout, so changes there show on the next
+-- start. Run :helptags ~/src/commits.vim/doc after changing its help.
+vim.opt.runtimepath:prepend(vim.fn.expand("~/src/commits.vim"))
+
 -- options
 vim.opt.number = true
 vim.opt.tabstop = 2
@@ -543,9 +547,6 @@ require("gitsigns").setup({
 		vim.keymap.set("n", "<leader>gr", gs.reset_hunk, opts)
 		vim.keymap.set("n", "<leader>gu", gs.undo_stage_hunk, opts)
 		vim.keymap.set("n", "<leader>gp", gs.preview_hunk, opts)
-		vim.keymap.set("n", "<leader>gd", function()
-			gs.toggle_deleted(gs.toggle_linehl())
-		end, opts)
 		vim.keymap.set("n", "<leader>gS", gs.stage_buffer, opts)
 		vim.keymap.set("n", "<leader>gR", gs.reset_buffer, opts)
 
@@ -561,27 +562,40 @@ require("gitsigns").setup({
 
 -- Git commands
 vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns blame<cr>")
--- ,gD: the buffer's changes side by side, as GitHub shows them. Again closes
--- them. See lua/diffsplit.lua.
-vim.keymap.set("n", "<leader>gD", require("diffsplit").toggle)
 
--- commits: go through commits with a diff of each changed file, see
--- lua/commits.lua. ,gl: the last 100 commits. ,gh: the commits that changed
--- the current file, or the selected lines. ,gm: the commits on this branch
--- that origin's default branch doesn't have, oldest first. :Commits takes
--- git log arguments, like :Commits main..HEAD --author=Joakim. diff picks the
--- diff a browser starts with, "unified" or "split". In the browser, ,gd and
--- ,gD switch to the unified and the split diff, as they show a buffer's
--- changes.
+-- commits
 local commits = require("commits")
-commits.setup({ diff = "split" })
+commits.setup({
+	diff = "split",
+	-- The browser's keys.
+	on_attach = function(buf, kind)
+		-- nowait, so y doesn't wait for vim-surround's ys.
+		local opts = { buffer = buf, nowait = true }
+		vim.keymap.set("n", "]c", commits.next_commit, opts)
+		vim.keymap.set("n", "[c", commits.prev_commit, opts)
+		vim.keymap.set("n", "]f", commits.next_file, opts)
+		vim.keymap.set("n", "[f", commits.prev_file, opts)
+		vim.keymap.set("n", "]h", commits.next_hunk, opts)
+		vim.keymap.set("n", "[h", commits.prev_hunk, opts)
+		vim.keymap.set("n", "M", commits.message, opts)
+		vim.keymap.set("n", "O", commits.browse, opts)
+		vim.keymap.set("n", "P", commits.pull_request, opts)
+		vim.keymap.set("n", "q", commits.close, opts)
+		vim.keymap.set("n", "<leader>gd", commits.unified, opts)
+		vim.keymap.set("n", "<leader>gD", commits.split, opts)
+		if kind == "list" then
+			vim.keymap.set("n", "<CR>", commits.select, opts)
+			vim.keymap.set("n", "o", commits.select, opts)
+			vim.keymap.set("n", "y", commits.copy, opts)
+		end
+	end,
+})
 vim.keymap.set("n", "<leader>gl", commits.log)
 vim.keymap.set("n", "<leader>gh", commits.file)
 vim.keymap.set("x", "<leader>gh", commits.lines)
 vim.keymap.set("n", "<leader>gm", commits.branch)
-vim.api.nvim_create_user_command("Commits", function(cmd)
-	commits.open(cmd.fargs)
-end, { nargs = "*" })
+vim.keymap.set("n", "<leader>gd", require("commits").unified)
+vim.keymap.set("n", "<leader>gD", require("commits").split)
 
 -- close the Gitsigns blame split with <esc> or q
 vim.api.nvim_create_autocmd("FileType", {
