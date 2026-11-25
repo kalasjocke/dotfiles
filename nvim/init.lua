@@ -63,6 +63,11 @@ if vim.env.REX_SESSION ~= nil then
 else
 	vim.cmd.colorscheme("rose-pine")
 end
+-- Color the text of a Markdown link, the [this] in [this](url), like a
+-- [[wiki-link]], which marksman marks as a class.
+for _, group in ipairs({ "@markup.link.label", "@markup.link.label.markdown_inline" }) do
+	vim.api.nvim_set_hl(0, group, { link = "@lsp.type.class" })
+end
 
 -- fzf
 require("fzf-lua").setup({
