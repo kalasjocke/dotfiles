@@ -50,7 +50,9 @@ Co-Authored-By: ...
 # Git branches
 
 - Prefix every new branch with `feature/` or `fix/`, in every repo, for
-  example `fix/public-link-redirect-keeps-start-time`.
+  example `fix/public-link-redirect-keeps-start-time`. The exception is a
+  branch for a Linear issue: use the branch name Linear generates for it, as
+  the issue-tracker skill says.
 
 # Writing style
 

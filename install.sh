@@ -61,9 +61,20 @@ done
 link "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 link "$DOTFILES/claude/notify.sh" "$HOME/.claude/notify.sh"
 link "$DOTFILES/claude/tab-name.sh" "$HOME/.claude/tab-name.sh"
-for dir in "$DOTFILES"/claude/skills/*/; do
+
+# My Claude Code skills live in their own repo, cloned to ~/src/skills, under
+# skills/<kind>/<name>. The repo is private, so the clone, and later pulls, use
+# the kalasjocke account's gh token even when another gh account is active.
+if [ ! -d "$HOME/src/skills" ]; then
+  git clone -c 'credential.https://github.com.helper=' \
+    -c 'credential.https://github.com.helper=!f() { test "$1" = get && echo username=kalasjocke && echo "password=$(gh auth token --user kalasjocke)"; }; f' \
+    https://github.com/kalasjocke/skills.git "$HOME/src/skills" ||
+    echo "Run install.sh again after gh auth login as kalasjocke to get ~/src/skills"
+fi
+for dir in "$HOME"/src/skills/skills/*/*/; do
+  [ -f "$dir/SKILL.md" ] || continue
   name="$(basename "$dir")"
-  link "$DOTFILES/claude/skills/$name" "$HOME/.claude/skills/$name"
+  link "${dir%/}" "$HOME/.claude/skills/$name"
 done
 
 # Claude Code writes to its settings file, so start from a copy of the base
