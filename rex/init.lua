@@ -22,8 +22,6 @@ rex.bind("ctrl+a>c", "client.tab.new")
 rex.bind("ctrl+a>n", "client.tab.next")
 rex.bind("ctrl+a>p", "client.tab.previous")
 
--- tmux.conf:104-111, vim-tmux-navigator: ctrl+h/j/k/l move between panes,
--- unless vim runs in the pane, in which case the key goes to vim.
 local function is_vim(ctx)
 	local p = rex.block.call("com.superlogical.terminal", "process", { block_id = ctx.block_id })
 	local fg = p and p.foreground
