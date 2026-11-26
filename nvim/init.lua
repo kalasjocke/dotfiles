@@ -80,6 +80,17 @@ require("fzf-lua").setup({
 			hidden = true,
 		},
 	},
+	-- ,gg only picks a changed file to review. Drop git status' stage, unstage
+	-- and reset, so <left> and <right> move in the prompt again.
+	git = {
+		status = {
+			actions = {
+				["left"] = false,
+				["right"] = false,
+				["ctrl-x"] = false,
+			},
+		},
+	},
 })
 
 -- keymaps
