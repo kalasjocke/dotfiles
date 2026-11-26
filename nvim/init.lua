@@ -508,36 +508,10 @@ require("claudecode").setup({
 	},
 })
 
-local function get_claude_pane()
-	return vim.trim(vim.fn.system([[
-		tmux list-panes -F '#{pane_id} #{pane_pid}' | while IFS=' ' read -r id pid; do
-			if pgrep -P "$pid" -f claude >/dev/null 2>&1; then
-				printf "%s" "$id"
-				break
-			fi
-		done
-	]]))
-end
-
-local function focus_claude_pane()
-	local pane = get_claude_pane()
-	if pane ~= "" then
-		vim.fn.system({ "tmux", "select-pane", "-t", pane })
-	end
-end
-
-vim.keymap.set("v", "<leader>as", function()
-	vim.cmd("ClaudeCodeSend")
-	focus_claude_pane()
-end)
-vim.keymap.set("v", "<leader>aS", "<cmd>ClaudeCodeSend<cr>")
-vim.keymap.set("v", "<leader>ae", function()
-	local pane = get_claude_pane()
-	if pane ~= "" then
-		vim.fn.system({ "tmux", "send-keys", "-t", pane, "-l", "Explain the selection" })
-		vim.fn.system({ "tmux", "send-keys", "-t", pane, "Enter" })
-	end
-end)
+-- Comments to Claude, in the tmux or Rex pane left of Neovim's. See
+-- lua/claude.lua. ,c: a comment box below the line or the selected lines.
+-- Enter sends it.
+vim.keymap.set({ "n", "x" }, "<leader>c", require("claude").comment)
 
 -- gitsigns
 require("gitsigns").setup({
