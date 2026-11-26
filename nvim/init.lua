@@ -624,6 +624,8 @@ vim.api.nvim_create_autocmd("FileType", {
 
 -- trouble
 require("trouble").setup({
+	-- Move to Trouble's window when it opens.
+	focus = true,
 	keys = {
 		["<esc>"] = "close",
 	},
@@ -634,6 +636,17 @@ require("trouble").setup({
 		},
 	},
 })
-vim.keymap.set("n", "<leader>c", "<cmd>Trouble close<cr>")
+-- q closes Trouble from any window while it's open. Otherwise, and while a
+-- macro records, q works as usual. Closing waits until the mapping returns,
+-- as an expr mapping can't change windows.
+vim.keymap.set("n", "q", function()
+	if vim.fn.reg_recording() == "" and require("trouble").is_open() then
+		vim.schedule(function()
+			vim.cmd("Trouble close")
+		end)
+		return "<Ignore>"
+	end
+	return "q"
+end, { expr = true })
 vim.keymap.set("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>")
 vim.keymap.set("n", "<leader>xq", "<cmd>Trouble qflist toggle<cr>")
