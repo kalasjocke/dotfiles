@@ -600,6 +600,7 @@ commits.setup({
 		if kind == "list" then
 			vim.keymap.set("n", "<CR>", commits.select, opts)
 			vim.keymap.set("n", "o", commits.select, opts)
+			vim.keymap.set("n", "<Space>", commits.toggle_files, opts)
 			vim.keymap.set("n", "y", commits.copy, opts)
 		end
 	end,
