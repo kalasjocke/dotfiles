@@ -94,6 +94,9 @@ require("fzf-lua").setup({
 })
 
 -- keymaps
+-- option+Backspace deletes the word before the cursor, as in the shell and
+-- Claude's prompt. Rex sends it as Esc then Backspace, which reads as <M-BS>.
+vim.keymap.set({ "i", "c" }, "<M-BS>", "<C-w>")
 vim.keymap.set("n", "<leader>o", ":update<CR>:source<CR>")
 vim.keymap.set("n", "<leader>w", ":write<CR>")
 vim.keymap.set("n", "<leader>q", ":quit<CR>")
