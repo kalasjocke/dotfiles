@@ -525,14 +525,6 @@ require("gitsigns").setup({
 		-- Blame
 		vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns blame<cr>")
 
-		-- Navigation
-		vim.keymap.set("n", "]h", function()
-			gs.nav_hunk("next")
-		end, opts)
-		vim.keymap.set("n", "[h", function()
-			gs.nav_hunk("prev")
-		end, opts)
-
 		-- Staging
 		vim.keymap.set("n", "<leader>gs", gs.stage_hunk, opts)
 		vim.keymap.set("n", "<leader>gr", gs.reset_hunk, opts)
@@ -585,6 +577,10 @@ vim.keymap.set("x", "<leader>gh", commits.lines)
 vim.keymap.set("n", "<leader>gm", commits.branch)
 vim.keymap.set("n", "<leader>gd", require("commits").unified)
 vim.keymap.set("n", "<leader>gD", require("commits").split)
+vim.keymap.set("n", "]f", commits.next_file)
+vim.keymap.set("n", "[f", commits.prev_file)
+vim.keymap.set("n", "]h", commits.next_hunk)
+vim.keymap.set("n", "[h", commits.prev_hunk)
 
 -- close the Gitsigns blame split with <esc> or q
 vim.api.nvim_create_autocmd("FileType", {
