@@ -75,6 +75,10 @@ Co-Authored-By: ...
 
 # Issues and pull requests
 
+- **Go through the issue-tracker skill.** When I mention an issue or a spec, or
+  a task needs one, load the issue-tracker skill before calling Linear or
+  reading `.scratch/`. It says which tracker the project uses, how to read and
+  create issues, and what an issue's branch is called.
 - **Keep the PR in sync.** When pushing to a branch with an open PR, update the
   PR title and description to match the current commits.
 - **Keep PR commits reviewable one by one.** Fold review fixes into the commit
