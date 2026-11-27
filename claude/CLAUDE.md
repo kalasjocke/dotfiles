@@ -6,12 +6,16 @@
 - **Keep diffs minimal and scoped.** Only include changes the task intends.
   Revert incidental cleanups and unrelated reformatting so review stays clean.
 - **Prove it's done.** Run the relevant tests or checks and show the output
-  instead of asserting success. If something is skipped or failing, say so.
-  When a change affects what a user sees, run the app and check the change
-  there too. For a web app, use the Chrome DevTools MCP.
-- **Don't merge or release unless I say so.** Merging a branch or PR, or
-  cutting a release, is my call, even when it's reviewed, green and pushed.
-  Pushing when asked is fine. Stop there.
+  instead of asserting success. If something is skipped or failing, say so. When
+  a change affects what a user sees, run the app and check the change there too.
+  For a web app, use the Chrome DevTools MCP.
+- **Commit only when I ask.** Leave changes uncommitted, so I can review them
+  first. Starting a skill that commits or pushes counts as asking for the
+  commits and pushes it describes.
+- **Don't merge or release unless I say so.** Merging a branch or PR, or cutting
+  a release, is my call, even when it's reviewed, green and pushed. Pushing when
+  asked is fine. Stop there. A request to push covers that push only: wait to be
+  asked again.
 
 # Writing style
 
@@ -32,10 +36,10 @@ Plain and direct, in replies, commit messages, PR descriptions and comments:
 
 # Git branches
 
-- Prefix every new branch with `feature/` or `fix/`, in every repo, for
-  example `fix/public-link-redirect-keeps-start-time`. The exception is a
-  branch for a Linear issue: use the branch name Linear generates for it, as
-  the issue-tracker skill says.
+- Prefix every new branch with `feature/` or `fix/`, in every repo, for example
+  `fix/public-link-redirect-keeps-start-time`. The exception is a branch for a
+  Linear issue: use the branch name Linear generates for it, as the
+  issue-tracker skill says.
 - **Use a worktree when the checkout is busy.** Otherwise, create the branch in
   the checkout you're in. Before switching branches, check whether the checkout
   is busy:
@@ -62,14 +66,14 @@ Plain and direct, in replies, commit messages, PR descriptions and comments:
 - Push a rewritten branch with `--force-with-lease`, never `--force`, and never
   force-push the default branch or a branch someone else shares.
 - **Verify history rewrites.** After a squash, reword or fold, confirm the tree
-  is unchanged (`git diff <old-tip> HEAD` is empty). Rewrites reuse the
-  old messages verbatim, so reread every rewritten commit's message and update
-  any that no longer describe it.
+  is unchanged (`git diff <old-tip> HEAD` is empty). Rewrites reuse the old
+  messages verbatim, so reread every rewritten commit's message and update any
+  that no longer describe it.
 
 # Git commit messages
 
-Write a subject line, a blank line, an optional short lead-in ending in a
-colon, the body as bullets, a blank line, and the trailer:
+Write a subject line, a blank line, an optional short lead-in ending in a colon,
+the body as bullets, a blank line, and the trailer:
 
 ```
 Retry failed webhook deliveries with backoff
@@ -88,8 +92,8 @@ Co-Authored-By: ...
   never collapse the bullets into one paragraph.
 - Keep bullets few, ideally five or fewer.
 - A one-line change can be a subject with no body.
-- Stage files by name, not whole directories, so unrelated files don't slip
-  into a commit.
+- Stage files by name, not whole directories, so unrelated files don't slip into
+  a commit.
 
 # Issues and pull requests
 
@@ -99,15 +103,16 @@ Co-Authored-By: ...
   create issues, and what an issue's branch is called.
 - **Keep the PR in sync.** When pushing to a branch with an open PR, update the
   PR title and description to match the current commits.
-- **Keep PR commits reviewable one by one.** Fold review fixes into the commit
-  they belong to (fixup and autosquash) instead of adding fix commits on top.
+- **Keep PR commits reviewable one by one.** When you commit a review fix, make
+  it a `git commit --fixup=<sha>` for the commit it belongs to, so I can review
+  the fix on its own. Fold the fixups in with an autosquash only when I ask.
 - **Link what you mention.** Give the URL for every PR, commit, issue or doc you
   create or refer to. Write a PR number as a link to that PR, for example
   `[#123](https://github.com/<org>/<repo>/pull/123)`, never as a bare `#123`.
 
 # Markdown files
 
-- Wrap commit messages and plans at 80 columns, but not PR descriptions. In a
-  PR description, write each paragraph and bullet on one line.
+- Wrap commit messages and plans at 80 columns, but not PR descriptions. In a PR
+  description, write each paragraph and bullet on one line.
 - In a plan, indent a bullet's continuation lines to line up with its text.
   Don't wrap headings, tables, code blocks or links that would break.
