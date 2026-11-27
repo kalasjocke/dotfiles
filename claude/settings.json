@@ -12,10 +12,12 @@
       "Bash(git *)",
       "WebFetch",
       "WebSearch",
-      "Search"
+      "Search",
+      "mcp__plugin_linear_linear__*"
     ],
     "defaultMode": "auto"
   },
+  "model": "opus",
   "hooks": {
     "Notification": [
       {
@@ -126,14 +128,24 @@
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
     "github@claude-plugins-official": true,
-    "commit-commands@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": false,
+    "linear@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "chrome-devtools-mcp@chrome-devtools-plugins": true,
-    "rust-analyzer-lsp@claude-plugins-official": true,
-    "swift-lsp@claude-plugins-official": true
+    "slack@claude-plugins-official": false
   },
   "effortLevel": "xhigh",
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    }
+  },
   "tui": "fullscreen",
+  "worktree": {
+    "baseRef": "head"
+  },
+  "editorMode": "normal",
   "preferredNotifChannel": "terminal_bell",
+  "switchModelsOnFlag": false,
   "skipAutoPermissionPrompt": true
 }
