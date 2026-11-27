@@ -7,6 +7,8 @@
   Revert incidental cleanups and unrelated reformatting so review stays clean.
 - **Prove it's done.** Run the relevant tests or checks and show the output
   instead of asserting success. If something is skipped or failing, say so.
+  When a change affects what a user sees, run the app and check the change
+  there too. For a web app, use the Chrome DevTools MCP.
 - **Don't merge or release unless I say so.** Merging a branch or PR, or
   cutting a release, is my call, even when it's reviewed, green and pushed.
   Pushing when asked is fine. Stop there.
