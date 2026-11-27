@@ -7,20 +7,46 @@
   Revert incidental cleanups and unrelated reformatting so review stays clean.
 - **Prove it's done.** Run the relevant tests or checks and show the output
   instead of asserting success. If something is skipped or failing, say so.
+- **Don't merge or release unless I say so.** Merging a branch or PR, or
+  cutting a release, is my call, even when it's reviewed, green and pushed.
+  Pushing when asked is fine. Stop there.
+
+# Writing style
+
+Plain and direct, in replies, commit messages, PR descriptions and comments:
+
+- Plain words: "use" not "leverage", "is" not "serves as", "to" not "in order
+  to". No AI vocabulary (delve, crucial, pivotal, robust, seamless, landscape,
+  underscore).
+- Name the mechanism or the number, not the feeling. Cut sentences that could
+  appear unchanged in another project.
+- One idea per sentence, active voice, few adverbs. No metaphors where a literal
+  phrase exists (no "surface", "wedge", "north star", "rides along").
+- No em dashes; use periods or commas. Colons only before a list or example.
+  Sentence-case headings, little bold, no decorative emoji.
+- Whole sentences: no arrows, dropped articles or symbol-speak.
+- No filler, hedging, chatbot phrases ("Let me know if…") or generic
+  conclusions.
+
+# Git branches
+
+- Prefix every new branch with `feature/` or `fix/`, in every repo, for
+  example `fix/public-link-redirect-keeps-start-time`. The exception is a
+  branch for a Linear issue: use the branch name Linear generates for it, as
+  the issue-tracker skill says.
+
+# Git history
+
+- Don't use `git stash`. Other sessions and worktrees share it. If uncommitted
+  changes are in the way, ask what to do with them.
+- To update a branch, rebase it onto the latest default branch from origin.
+  Don't merge the default branch in.
+- Push a rewritten branch with `--force-with-lease`, never `--force`, and never
+  force-push the default branch or a branch someone else shares.
 - **Verify history rewrites.** After a squash, reword or rebase, confirm the
   tree is unchanged (`git diff <old-tip> HEAD` is empty). Rewrites reuse the
   old messages verbatim, so reread every rewritten commit's message and update
   any that no longer describe it.
-- **Keep the PR in sync.** When pushing to a branch with an open PR, update the
-  PR title and description to match the current commits.
-- **Keep PR commits reviewable one by one.** Fold review fixes into the commit
-  they belong to (fixup and autosquash) instead of adding fix commits on top.
-- **Link what you mention.** Give the URL for every PR, commit, issue or doc you
-  create or refer to. Write a PR number as a link to that PR, for example
-  `[#123](https://github.com/<org>/<repo>/pull/123)`, never as a bare `#123`.
-- **Don't merge or release unless I say so.** Merging a branch or PR, or
-  cutting a release, is my call, even when it's reviewed, green and pushed.
-  Pushing when asked is fine. Stop there.
 
 # Git commit messages
 
@@ -47,38 +73,15 @@ Co-Authored-By: ...
 - Stage files by name, not whole directories, so unrelated files don't slip
   into a commit.
 
-# Git branches
+# Issues and pull requests
 
-- Prefix every new branch with `feature/` or `fix/`, in every repo, for
-  example `fix/public-link-redirect-keeps-start-time`. The exception is a
-  branch for a Linear issue: use the branch name Linear generates for it, as
-  the issue-tracker skill says.
-
-# Git history
-
-- Don't use `git stash`. Other sessions and worktrees share it. If uncommitted
-  changes are in the way, ask what to do with them.
-- To update a branch, rebase it onto the latest default branch from origin.
-  Don't merge the default branch in.
-- Push a rewritten branch with `--force-with-lease`, never `--force`, and never
-  force-push the default branch or a branch someone else shares.
-
-# Writing style
-
-Plain and direct, in replies, commit messages, PR descriptions and comments:
-
-- Plain words: "use" not "leverage", "is" not "serves as", "to" not "in order
-  to". No AI vocabulary (delve, crucial, pivotal, robust, seamless, landscape,
-  underscore).
-- Name the mechanism or the number, not the feeling. Cut sentences that could
-  appear unchanged in another project.
-- One idea per sentence, active voice, few adverbs. No metaphors where a literal
-  phrase exists (no "surface", "wedge", "north star", "rides along").
-- No em dashes; use periods or commas. Colons only before a list or example.
-  Sentence-case headings, little bold, no decorative emoji.
-- Whole sentences: no arrows, dropped articles or symbol-speak.
-- No filler, hedging, chatbot phrases ("Let me know if…") or generic
-  conclusions.
+- **Keep the PR in sync.** When pushing to a branch with an open PR, update the
+  PR title and description to match the current commits.
+- **Keep PR commits reviewable one by one.** Fold review fixes into the commit
+  they belong to (fixup and autosquash) instead of adding fix commits on top.
+- **Link what you mention.** Give the URL for every PR, commit, issue or doc you
+  create or refer to. Write a PR number as a link to that PR, for example
+  `[#123](https://github.com/<org>/<repo>/pull/123)`, never as a bare `#123`.
 
 # Markdown files
 
