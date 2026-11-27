@@ -54,15 +54,15 @@ local function tmux_pane()
 	return best
 end
 
--- The Rex pane just left of Neovim's. Neovim inherits its own session and pane
--- from REX_SESSION and REX_BLOCK. Rex gives each pane's rect as x, y, width
--- and height, from 0 to 1, within its tab.
+-- The Rex pane just left of Neovim's. Neovim inherits its own pane from
+-- REX_BLOCK, and Rex takes that block ID wherever a session goes. Rex gives
+-- each pane's rect as x, y, width and height, from 0 to 1, within its tab.
 local function rex_pane()
-	local session, me = vim.env.REX_SESSION, vim.env.REX_BLOCK
-	if not session or not me then
+	local me = vim.env.REX_BLOCK
+	if not me then
 		return nil
 	end
-	local result = vim.system({ "rex", "session", "inspect", session, "--json" }, { text = true }):wait()
+	local result = vim.system({ "rex", "session", "inspect", me, "--json" }, { text = true }):wait()
 	if result.code ~= 0 then
 		return nil
 	end
@@ -122,7 +122,7 @@ local function claude()
 	end
 	local pane = rex_pane()
 	local function rex(command, ...)
-		return run({ "rex", command, "-s", vim.env.REX_SESSION, ... })
+		return run({ "rex", command, "-s", vim.env.REX_BLOCK, ... })
 	end
 	return pane
 		and {

@@ -41,7 +41,7 @@ vim.opt.ignorecase = true
 vim.opt.smartcase = true
 -- Start with an empty buffer, without the intro screen
 vim.opt.shortmess:append("I")
-if vim.env.REX_SESSION ~= nil then
+if vim.env.REX_BLOCK ~= nil then
 	-- Rex's Merino Dark theme uses GitHub's colors.
 	require("github-theme").setup({
 		-- Bolds Type and @type.builtin only. A group override replaces the whole
@@ -114,7 +114,7 @@ if vim.env.TMUX ~= nil then
 	vim.keymap.set("x", "<C-k>", "<Cmd>TmuxNavigateUp<CR>")
 	vim.keymap.set("x", "<C-l>", "<Cmd>TmuxNavigateRight<CR>")
 end
-if vim.env.REX_SESSION ~= nil then
+if vim.env.REX_BLOCK ~= nil then
 	-- Move between nvim windows. In Rex, at the edge, ask Rex to focus the
 	-- neighboring pane. Rex passes ctrl+hjkl to nvim, see ~/.config/rex/init.lua.
 	vim.g.tmux_navigator_no_mappings = 1
@@ -122,13 +122,13 @@ if vim.env.REX_SESSION ~= nil then
 		return function()
 			local win = vim.api.nvim_get_current_win()
 			vim.cmd.wincmd(wincmd)
-			if vim.api.nvim_get_current_win() == win and vim.env.REX_SESSION ~= nil then
+			if vim.api.nvim_get_current_win() == win and vim.env.REX_BLOCK ~= nil then
 				vim.system({
 					"rex",
 					"api",
 					"call",
 					"-s",
-					vim.env.REX_SESSION,
+					vim.env.REX_BLOCK,
 					"session.focus_direction",
 					vim.json.encode({ direction = direction }),
 				})

@@ -66,7 +66,7 @@ setopt hist_ignore_all_dups
 
 # fzf zsh integration
 export FZF_DEFAULT_OPTS="--no-separator --color=base16"
-[ -n "$REX_SESSION" ] && FZF_DEFAULT_OPTS+=" --color=gutter:#373737,bg+:#373737"
+[ -n "$REX_BLOCK" ] && FZF_DEFAULT_OPTS+=" --color=gutter:#373737,bg+:#373737"
 export FZF_CTRL_R_OPTS='--height 12'
 source <(fzf --zsh)
 
@@ -122,16 +122,16 @@ function _cdw_dir {
 # Rex reports each pane's foreground program with its pid and folder.
 function _cdw_rex {
   local window block label pid dir cwd
-  window=$(rex block ls -s "$REX_SESSION" --json |
+  window=$(rex block ls -s "$REX_BLOCK" --json |
     jq -r --arg b "$REX_BLOCK" '.blocks[] | select(.block_id == $b) | .window_id')
   while IFS=$'\t' read -r block label; do
-    IFS=$'\t' read -r pid dir < <(rex block call -s "$REX_SESSION" -b "$block" process |
+    IFS=$'\t' read -r pid dir < <(rex block call -s "$REX_BLOCK" -b "$block" process |
       jq -r '.foreground | select(.argv0 == "claude" or ((.invoked_path // "") | endswith("/claude")))
         | "\(.pid)\t\(.cwd)"')
     [[ -n $pid ]] || continue
     cwd=$(_cdw_dir "$pid" "$label")
     cd "${cwd:-$dir}" && return
-  done < <(rex block ls -s "$REX_SESSION" --json |
+  done < <(rex block ls -s "$REX_BLOCK" --json |
     jq -r --arg w "$window" '.blocks[] | select(.window_id == $w) | "\(.block_id)\t\(.label // "")"')
   echo "No Claude Code session in this Rex tab" >&2
   return 1

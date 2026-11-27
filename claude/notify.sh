@@ -21,6 +21,10 @@
 # option directly.
 
 input=$(cat)
+
+# Outside tmux, such as in Rex, there is no window to set the state on.
+[ -n "$TMUX_PANE" ] || tmux info >/dev/null 2>&1 || exit 0
+
 field() { printf '%s' "$input" | jq -r "$1"; }
 
 case $(field .hook_event_name) in
