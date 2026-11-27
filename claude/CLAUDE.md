@@ -40,11 +40,16 @@ Plain and direct, in replies, commit messages, PR descriptions and comments:
 - Don't use `git stash`. Other sessions and worktrees share it. If uncommitted
   changes are in the way, ask what to do with them.
 - To update a branch, rebase it onto the latest default branch from origin.
-  Don't merge the default branch in.
+  Don't merge the default branch in. Then run the typecheck and tests, and ask
+  whether to push.
+- In a rebase conflict, take the union of append-only lists. For a generated
+  file, such as a schema dump, codegen types or a lockfile, resolve each step
+  minimally, then regenerate it once after the rebase and amend. Set its
+  tool-version header lines to match the default branch.
 - Push a rewritten branch with `--force-with-lease`, never `--force`, and never
   force-push the default branch or a branch someone else shares.
-- **Verify history rewrites.** After a squash, reword or rebase, confirm the
-  tree is unchanged (`git diff <old-tip> HEAD` is empty). Rewrites reuse the
+- **Verify history rewrites.** After a squash, reword or fold, confirm the tree
+  is unchanged (`git diff <old-tip> HEAD` is empty). Rewrites reuse the
   old messages verbatim, so reread every rewritten commit's message and update
   any that no longer describe it.
 
