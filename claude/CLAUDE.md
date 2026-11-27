@@ -36,11 +36,22 @@ Plain and direct, in replies, commit messages, PR descriptions and comments:
   example `fix/public-link-redirect-keeps-start-time`. The exception is a
   branch for a Linear issue: use the branch name Linear generates for it, as
   the issue-tracker skill says.
+- **Use a worktree when the checkout is busy.** Otherwise, create the branch in
+  the checkout you're in. Before switching branches, check whether the checkout
+  is busy:
+  - another live Claude session started in this checkout, meaning a
+    `~/.claude/sessions/<pid>.json` whose `cwd` is this folder and whose pid is
+    running,
+  - the checkout is on a branch you didn't start,
+  - or it has uncommitted changes you didn't make.
+
+  Then make the worktree with EnterWorktree. Name it after the branch, without
+  `feature/` or `fix/`, and rename the branch with `git branch -m` if it lacks
+  the prefix.
 
 # Git history
 
-- Don't use `git stash`. Other sessions and worktrees share it. If uncommitted
-  changes are in the way, ask what to do with them.
+- Don't use `git stash`. Other sessions and worktrees share it.
 - To update a branch, rebase it onto the latest default branch from origin.
   Don't merge the default branch in. Then run the typecheck and tests, and ask
   whether to push.
