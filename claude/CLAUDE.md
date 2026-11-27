@@ -54,6 +54,15 @@ Co-Authored-By: ...
   branch for a Linear issue: use the branch name Linear generates for it, as
   the issue-tracker skill says.
 
+# Git history
+
+- Don't use `git stash`. Other sessions and worktrees share it. If uncommitted
+  changes are in the way, ask what to do with them.
+- To update a branch, rebase it onto the latest default branch from origin.
+  Don't merge the default branch in.
+- Push a rewritten branch with `--force-with-lease`, never `--force`, and never
+  force-push the default branch or a branch someone else shares.
+
 # Writing style
 
 Plain and direct, in replies, commit messages, PR descriptions and comments:
